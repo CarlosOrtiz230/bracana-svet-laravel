@@ -17,3 +17,8 @@ WORKDIR /scans
 # Default command (can be overwritten)
 CMD ["/bin/bash"]
 
+COPY run_zap.sh /usr/local/bin/run_zap.sh
+RUN chmod +x /usr/local/bin/run_zap.sh
+
+CMD ["/bin/bash"]
+
