@@ -10,19 +10,13 @@ fi
 
 echo "Received target: $TARGET_URL"
 
-# Timestamp for uniqueness
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 
-# Define output paths
-REPORT_JSON="/nikto/wrk/nikto_report_${TIMESTAMP}.json"
-REPORT_HTML="/nikto/wrk/nikto_report_${TIMESTAMP}.html"
+./nikto.pl -host "$TARGET_URL" -Tuning 1234567890abcde -Format json -output "/nikto/wrk/nikto_report_${TIMESTAMP}.json"
+./nikto.pl -host "$TARGET_URL" -Tuning 1234567890abcde -Format htm -output "/nikto/wrk/nikto_report_${TIMESTAMP}.html"
 
-# Run Nikto with both formats
-nikto -host "$TARGET_URL" \
-  -Format json -output "$REPORT_JSON" \
-  -Format htm -output "$REPORT_HTML"
+if [ -n "$HOST_UID" ] && [ -n "$HOST_GID" ]; then
+  chown "$HOST_UID:$HOST_GID" /nikto/wrk/nikto_report_"$TIMESTAMP".*
+fi
 
-# Indicate saved files
-echo -e "\n✅ Reports written to:"
-echo "- JSON: $REPORT_JSON"
-echo "- HTML: $REPORT_HTML"
+echo -e "\n✅ Reports saved in /nikto/wrk/"

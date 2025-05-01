@@ -6,7 +6,7 @@ USER root
 COPY run_zap.sh /usr/local/bin/run_zap.sh
 RUN chmod +x /usr/local/bin/run_zap.sh
 
-# Optional: switch back to default 'zap' user for runtime
-USER zap
+#  switch back to default 'zap' user for runtime
+# USER zap
 
 CMD ["/bin/bash"]
