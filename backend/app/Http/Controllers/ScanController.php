@@ -35,9 +35,11 @@ class ScanController extends Controller
         $command = "docker run --rm -v " . dirname($inputPath) . ":/scans bracana-zap bash -c 'run_zap.sh /scans/{$filename} /scans/report.json'";
         exec($command, $output, $status);
 
-        if ($status !== 0 || !file_exists($outputPath)) {
-            return back()->with('error', 'Scan failed or output file not generated.');
+        if (!file_exists($reportFile)) {
+            Log::error("ZAP report file not found at: $reportFile");
+            return response()->json(['error' => 'Report not generated.'], 500);
         }
+        
 
         $results = json_decode(file_get_contents($outputPath), true);
 
@@ -46,20 +48,40 @@ class ScanController extends Controller
 
     //Run Dynammic Analysis
     public function runDynamic(Request $request)
-    {
-        Log::info("based on the input go for atool to use for dynamic analyiss");
-        //validate the rul
-        $targetUrl = $request->input('target_url');
-        $tool = $request->input('tool'); // 'zap' or 'nikto'
+{
+    Log::info("based on the input go for a tool to use for dynamic analysis");
+
+    $targetUrl = $request->input('target_url');
+    $tool = $request->input('tool'); // ✅ add this line
+
+    $hostMode = env('DOCKER_HOST_MODE', 'linux');
+
+
+    //helped by the env variable to determin the host mode
+    //there are colitions with 127.0.1 since the container may get confused with itself even specifying the port
     
-        //run the correct scan based on the toool 
-        Log::info("running $tool scan on url: $targetUrl");
-        return match ($tool) {
-            'zap' => $this->runZapScan($targetUrl),
-            'nikto' => $this->runNiktoScan($targetUrl),
-            default => response()->json(['error' => 'Invalid scan tool'], 400),
-        };
+    if (preg_match('/^http:\/\/(localhost|127\.0\.0\.1)/', $targetUrl)) {
+        switch ($hostMode) {
+            case 'mac':
+            case 'windows':
+                $targetUrl = str_replace(['localhost', '127.0.0.1'], 'host.docker.internal', $targetUrl);
+                break;
+            case 'linux':
+            default:
+                $targetUrl = str_replace(['localhost', '127.0.0.1'], '172.17.0.1', $targetUrl);
+                break;
+        }
     }
+
+    Log::info("running $tool scan on url: $targetUrl");
+
+    return match ($tool) {
+        'zap' => $this->runZapScan($targetUrl),
+        'nikto' => $this->runNiktoScan($targetUrl),
+        default => response()->json(['error' => 'Invalid scan tool'], 400),
+    };
+}
+
     
     // Run Static Analyisi
     public function runStatic(Request $request)
@@ -114,12 +136,14 @@ class ScanController extends Controller
         }
         
         
-
+        Log::info("creating cmd command");
         // Run ZAP Docker container
         $cmd = "docker run --rm " .
             "--user " . posix_getuid() . ":" . posix_getgid() . " " .
             "-v " . escapeshellarg($reportDir) . ":/zap/wrk " .
             "zap-scanner run_zap.sh " . escapeshellarg($targetUrl);
+
+        Log::info("Running ZAP command: $cmd");
 
         exec($cmd, $output, $status);
 
@@ -128,10 +152,25 @@ class ScanController extends Controller
                 'error' => 'ZAP scan failed or no output generated.'
             ], 500);
         }
-     
+        
+        
+        $rawJson = file_get_contents($reportFile);
+
+        if (!$rawJson) {
+            Log::error("ZAP report is empty or unreadable.");
+            return response()->json(['error' => 'Empty report'], 500);
+        }
+
+        $parsed = json_decode($rawJson, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            Log::error("JSON parsing failed: " . json_last_error_msg());
+            return response()->json(['error' => 'Invalid report format'], 500);
+        }
         
         $alerts = $parsed['site'][0]['alerts'] ?? [];
 
+        Log::info("Creating ZapScan record");
         // Save to database
         $scan = ZapScan::create([
             'target_url' => $targetUrl,
@@ -139,11 +178,26 @@ class ScanController extends Controller
             'raw_output' => $rawJson,
         ]);
 
-        return view('result', [
-            'results' => $alerts,
-            'tool' => 'zap',
-            'scan_id' => $scan->id,
-        ]);
+        if (!$scan) {
+            Log::error("Failed to create ZapScan record");
+            return response()->json(['error' => 'Database insert failed'], 500);
+        }
+
+
+        Log::info("ZAP scan completed successfully. Scan ID: " . $scan->id);
+
+        try {
+            Log::info("Attempting to render result view with alerts: " . count($alerts));
+            return view('result', [
+                'results' => $alerts,
+                'tool' => 'zap',
+                'scan_id' => $scan->id,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("Error rendering result view: " . $e->getMessage());
+            return response()->json(['error' => 'Failed to render results'], 500);
+        }
+
     }
 
 
