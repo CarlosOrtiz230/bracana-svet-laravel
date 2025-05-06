@@ -4,7 +4,39 @@
     <meta charset="UTF-8">
     <title>BRANACA Security Scanner</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+    .dot-animation {
+        display: inline-block;
+        animation: bounce 1.4s infinite ease-in-out both;
+        font-size: 2rem;
+        color: #0d6efd;
+    }
+
+    .dot-animation:nth-child(1) {
+        animation-delay: -0.32s;
+    }
+
+    .dot-animation:nth-child(2) {
+        animation-delay: -0.16s;
+    }
+
+    .dot-animation:nth-child(3) {
+        animation-delay: 0;
+    }
+
+    @keyframes bounce {
+        0%, 80%, 100% {
+            transform: scale(0);
+        }
+        40% {
+            transform: scale(1);
+        }
+    }
+</style>
+
 </head>
+
+
 <body class="bg-light py-5">
 
 <div class="container">
@@ -38,6 +70,9 @@
 
                     <button type="submit" class="btn btn-primary">Run Static Scan</button>
                 </form>
+                
+
+
             </div>
         </div>
     </div>
@@ -76,6 +111,7 @@
                         <button type="submit">Run Scan</button>
                         
                     </form>
+                   
 
                 </div>
             </div>
@@ -83,5 +119,44 @@
     </div>
 </div>
 
+<!-- Global Loading Spinner (only once!) -->
+<div id="loadingSpinner" class="position-fixed top-0 start-0 w-100 h-100 d-none flex-column justify-content-center align-items-center bg-light bg-opacity-75" style="z-index: 1050;">
+
+    <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;" role="status">
+        <span class="visually-hidden">Scanning...</span>
+    </div>
+    <div class="mt-4 fs-5 text-secondary">Analyzing your input... please wait</div>
+    <div class="mt-2">
+        <span class="dot-animation">.</span>
+        <span class="dot-animation">.</span>
+        <span class="dot-animation">.</span>
+    </div>
+</div>
 </body>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const forms = document.querySelectorAll("form");
+        const spinner = document.getElementById("loadingSpinner");
+
+        forms.forEach(form => {
+            form.addEventListener("submit", function () {
+                spinner.classList.remove("d-none");
+                spinner.style.opacity = 0;
+                setTimeout(() => {
+                    spinner.style.transition = "opacity 0.5s";
+                    spinner.style.opacity = 1;
+                }, 10);
+
+                // Optional fallback
+                setTimeout(() => {
+                    if (!spinner.classList.contains("d-none")) {
+                        spinner.innerHTML += `<div class="mt-4 text-danger">⚠️ Scan may have stalled. Please refresh.</div>`;
+                    }
+                }, 90000);
+            });
+        });
+    });
+</script>
+
+
 </html>
