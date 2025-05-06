@@ -151,10 +151,15 @@ class ScanController extends Controller
         
         Log::info("creating cmd command");
         // Run ZAP Docker container
-        $cmd = "docker run --rm " .
-            "--user " . posix_getuid() . ":" . posix_getgid() . " " .
-            "-v " . escapeshellarg($reportDir) . ":/zap/wrk " .
-            "zap-scanner run_zap.sh " . escapeshellarg($targetUrl) . " " . escapeshellarg($complexity);
+        // $cmd = "docker run --rm " .
+        //     "--user " . posix_getuid() . ":" . posix_getgid() . " " .
+        //     "-v " . escapeshellarg($reportDir) . ":/zap/wrk " .
+        //     "zap-scanner run_zap.sh " . escapeshellarg($targetUrl) . " " . escapeshellarg($complexity);
+
+        $cmd .= " > /dev/null 2>&1 &";
+        exec($cmd);
+        Log::info("ZAP scan command sent to background.");
+
 
 
         Log::info("Running ZAP command: $cmd");

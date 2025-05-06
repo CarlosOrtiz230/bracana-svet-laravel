@@ -3,14 +3,14 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Console\Commands\RebuildScannerImages;
+use App\Console\Commands\RebuildDockerImages;
 
 class ConsoleCommandServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
         $this->commands([
-            RebuildScannerImages::class,
+            RebuildDockerImages::class,
         ]);
     }
 

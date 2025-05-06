@@ -4,12 +4,12 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use App\Console\Commands\RebuildScannerImages;
+use App\Console\Commands\RebuildDockerImages;
 
 class Kernel extends ConsoleKernel
 {
     protected $commands = [
-        RebuildScannerImages::class,
+        RebuildDockerImages::class,
     ];
 
     protected function schedule(Schedule $schedule): void

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 
 class RebuildDockerImages extends Command
 {
@@ -12,10 +13,15 @@ class RebuildDockerImages extends Command
 
     public function handle()
     {
-        if (env('REBUILD_DOCKERS') !== 'true') {
-            $this->info('REBUILD_DOCKERS is not set to true. Skipping rebuild.');
-            return Command::SUCCESS;
-        }
+        // $this->info('REBUILD_DOCKERS value: ' . var_export(env('REBUILD_DOCKERS'), true));
+        // Log::info('REBUILD_DOCKERS value: ' . env('REBUILD_DOCKERS'));
+        // if (env('REBUILD_DOCKERS') !== 'true') {
+        //     $this->info('REBUILD_DOCKERS is not set to true. Skipping rebuild.');
+        //     return Command::SUCCESS;
+        // }
+        
+       
+
 
         $basePath = base_path();
 

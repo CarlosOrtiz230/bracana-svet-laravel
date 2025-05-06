@@ -50,14 +50,14 @@ sleep 5  # Let daemon stabilize
 ZAP_PORT=$(cat /zap/zap.port)
 
 # Wait until passive scanning is done
-while true; do
-  RECORDS_LEFT=$(curl -s "http://localhost:$ZAP_PORT/JSON/pscan/view/recordsToScan/" | jq -r '.recordsToScan')
-  echo "Waiting for passive scan to finish... ($RECORDS_LEFT left)"
-  if [ "$RECORDS_LEFT" -eq 0 ]; then
-    break
-  fi
-  sleep 2
-done
+# while true; do
+#   RECORDS_LEFT=$(curl -s "http://localhost:$ZAP_PORT/JSON/pscan/view/recordsToScan/" | jq -r '.recordsToScan')
+#   echo "Waiting for passive scan to finish... ($RECORDS_LEFT left)"
+#   if [ "$RECORDS_LEFT" -eq 0 ]; then
+#     break
+#   fi
+#   sleep 2
+# done
 
 # Print alerts to terminal
 echo -e "\n================= JSON ALERTS =================\n"
@@ -68,6 +68,15 @@ echo -e "\n================= END OF ALERTS ===============\n"
 echo -e "\n✅ Reports written to:"
 echo "- JSON: $REPORT_JSON"
 echo "- HTML: $REPORT_HTML"
+
+echo "[DEBUG] Finished generating reports"
+
+if [ ! -f "$REPORT_JSON" ]; then
+  echo "[ERROR] JSON report not found!"
+fi
+
+echo "[DEBUG] About to print success message"
+
 
 echo "ZAP scan completed successfully."
 exit 0
