@@ -68,3 +68,6 @@ echo -e "\n================= END OF ALERTS ===============\n"
 echo -e "\n✅ Reports written to:"
 echo "- JSON: $REPORT_JSON"
 echo "- HTML: $REPORT_HTML"
+
+echo "ZAP scan completed successfully."
+exit 0
