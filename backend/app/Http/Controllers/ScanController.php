@@ -41,62 +41,17 @@ class ScanController extends Controller
 
 
     public function runDynamic(Request $request)
-{
-    // ✅ Validate input
-    $request->validate([
-        'ip' => 'required|ip',
-        'port' => 'required|numeric|min:1|max:65535',
-    ]);
-
-    $target = $request->ip . ':' . $request->port;
-    $escapedTarget = escapeshellarg("http://$target");
-
-    // ✅ Scan folder paths
-    $niktoPath = base_path("backend/storage/app/scans/nikto");
-    $zapPath = storage_path("app/scans/zap");
-
-    // ✅ Timestamps
-    $timestamp = now()->format('Y-m-d_H-i-s');
-
-    // ✅ Log start of dynamic scan
-    Log::info("Starting dynamic scan for target: $target at $timestamp");
-
-    // ✅ Run Nikto scan
-    $niktoCmd = "docker run --rm --network=host " .
-                "-v \"$niktoPath:/nikto/wrk\" " .
-                "-e HOST_UID=" . posix_getuid() . " -e HOST_GID=" . posix_getgid() . " " .
-                "bracana-nikto $escapedTarget";
-
-    Log::info("Running Nikto command: $niktoCmd");
-    exec($niktoCmd, $niktoOutput, $niktoStatus);
-
-    // ✅ Save Nikto output log
-    $niktoLogPath = "scans/nikto/nikto_output_{$timestamp}.log";
-    Storage::disk('local')->put($niktoLogPath, implode("\n", $niktoOutput));
-    Log::info("Nikto scan completed. Output saved to: $niktoLogPath");
-
-    // ✅ Run ZAP scan
-    $zapCmd = "docker run --rm --network=host " .
-              "-v \"$zapPath:/zap/wrk\" " .
-              "bracana-zap run_zap.sh $escapedTarget";
-
-    Log::info("Running ZAP command: $zapCmd");
-    exec($zapCmd, $zapOutput, $zapStatus);
-
-    // ✅ Save ZAP output log
-    $zapLogPath = "scans/zap/zap_output_{$timestamp}.log";
-    Storage::disk('local')->put($zapLogPath, implode("\n", $zapOutput));
-    Log::info("ZAP scan completed. Output saved to: $zapLogPath");
-
-    // ✅ Error feedback
-    if ($niktoStatus !== 0 || $zapStatus !== 0) {
-        Log::error("Dynamic scan failed for target: $target. Nikto status: $niktoStatus, ZAP status: $zapStatus");
-        return back()->with('error', 'Dynamic scan failed. Check containers or target accessibility.');
+    {
+        $targetUrl = $request->input('target_url');
+        $tool = $request->input('tool'); // 'zap' or 'nikto'
+    
+        return match ($tool) {
+            'zap' => $this->runZapScan($targetUrl),
+            'nikto' => $this->runNiktoScan($targetUrl),
+            default => response()->json(['error' => 'Invalid scan tool'], 400),
+        };
     }
-
-    Log::info("Dynamic scan for target: $target completed successfully.");
-    return back()->with('success', 'Dynamic scan with Nikto and ZAP completed!');
-}
+    
 
     
 

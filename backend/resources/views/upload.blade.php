@@ -40,16 +40,18 @@
                     <p class="card-text">Enter a live IP and port for real-time scanning (e.g., 192.168.1.10:8080).</p>
                     <form method="POST" action="{{ route('scan.dynamic') }}">
                         @csrf
-                        <div class="mb-3">
-                            <label for="ip" class="form-label">Target IP</label>
-                            <input type="text" class="form-control" name="ip" id="ip" placeholder="e.g. 192.168.0.100" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="port" class="form-label">Target Port</label>
-                            <input type="number" class="form-control" name="port" id="port" placeholder="e.g. 8080" required>
-                        </div>
-                        <button type="submit" class="btn btn-danger">Run Dynamic Scan</button>
+                        <label for="target_url">Target URL:</label>
+                        <input type="url" name="target_url" required>
+
+                        <label for="tool">Tool:</label>
+                        <select name="tool" required>
+                            <option value="zap">OWASP ZAP</option>
+                            <option value="nikto">Nikto</option>
+                        </select>
+
+                        <button type="submit">Run Scan</button>
                     </form>
+
                 </div>
             </div>
         </div>

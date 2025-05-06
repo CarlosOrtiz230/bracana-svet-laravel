@@ -1,12 +1,14 @@
 FROM ghcr.io/zaproxy/zaproxy:stable
 
-# Switch to root so we can copy and chmod into /usr/local/bin
+# Switch to root so we can install script
 USER root
 
 COPY run_zap.sh /usr/local/bin/run_zap.sh
 RUN chmod +x /usr/local/bin/run_zap.sh
 
-#  switch back to default 'zap' user for runtime
-# USER zap
+# Switch back to non-root user for security and correct file ownership
+USER zap
 
-CMD ["/bin/bash"]
+
+# Default command
+CMD ["run_zap.sh"]

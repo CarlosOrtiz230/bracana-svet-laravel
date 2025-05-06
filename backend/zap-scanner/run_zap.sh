@@ -2,17 +2,24 @@
 set -e
 
 TARGET_URL="$1"
+OUTPUT_DIR="${2:-/zap/wrk}"  # Default to /zap/wrk if not given
 
 if [ -z "$TARGET_URL" ]; then
-  echo "Usage: run_zap.sh <target_url>"
+  echo "Usage: run_zap.sh <target_url> [output_dir]"
   exit 1
 fi
 
 echo "Received target: $TARGET_URL"
+echo "Reports will be saved to: $OUTPUT_DIR"
+
+# Ensure output dir exists
+mkdir -p "$OUTPUT_DIR"
 
 # Define output file paths
 REPORT_JSON="/zap/wrk/report.json"
 REPORT_HTML="/zap/wrk/report.html"
+
+
 
 # Start the full scan and export reports
 zap-full-scan.py \
