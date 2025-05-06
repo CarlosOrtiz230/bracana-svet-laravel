@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\File;
 class RebuildDockerImages extends Command
 {
     protected $signature = 'scanner:rebuild-images';
-    protected $description = 'Rebuild selected Docker images if REBUILD_DOCKERS=true in .env';
+    protected $description = 'Rebuilds selected Docker images for the BRANACA scanner';
 
     public function handle()
     {
@@ -27,15 +27,15 @@ class RebuildDockerImages extends Command
         $niktoResult = $this->runBuild("$basePath/nikto_scanner/Dockerfile", 'bracana-nikto');
         $this->line($niktoResult);
 
-        // $this->info('Rebuilding Docker image: semgrep...');
+        // Uncomment below when ready
+        // $this->info('Rebuilding Docker image: bracana-semgrep...');
         // $semgrepResult = $this->runBuild("$basePath/semgrep_scanner/Dockerfile", 'bracana-semgrep');
         // $this->line($semgrepResult);
 
-        // $this->info('Rebuilding Docker image: codeql...');
+        // $this->info('Rebuilding Docker image: bracana-codeql...');
         // $codeqlResult = $this->runBuild("$basePath/codeql_scanner/Dockerfile", 'bracana-codeql');
         // $this->line($codeqlResult);
 
-        $this->info(' Selected Docker images rebuilt successfully.');
         return Command::SUCCESS;
     }
 
@@ -50,7 +50,7 @@ class RebuildDockerImages extends Command
         exec($cmd, $output, $status);
 
         return $status === 0
-            ? "$tag built successfully."
-            : "Failed to build $tag.\n" . implode("\n", $output);
+            ? " $tag built successfully."
+            : " Failed to build $tag.\n" . implode("\n", $output);
     }
 }
