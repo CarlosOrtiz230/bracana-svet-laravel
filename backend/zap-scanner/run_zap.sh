@@ -2,14 +2,17 @@
 set -e
 
 TARGET_URL="$1"
+COMPLEXITY="${2:-medium}"   # Default to medium if not given
 OUTPUT_DIR="${2:-/zap/wrk}"  # Default to /zap/wrk if not given
 
+
 if [ -z "$TARGET_URL" ]; then
-  echo "Usage: run_zap.sh <target_url> [output_dir]"
+  echo "Usage: run_zap.sh <target_url> [complexity] [output_dir]"
   exit 1
 fi
 
 echo "Received target: $TARGET_URL"
+echo "Complexity level: $COMPLEXITY"
 echo "Reports will be saved to: $OUTPUT_DIR"
 
 # Ensure output dir exists
@@ -19,14 +22,28 @@ mkdir -p "$OUTPUT_DIR"
 REPORT_JSON="/zap/wrk/report.json"
 REPORT_HTML="/zap/wrk/report.html"
 
+# Adjust scan options based on complexity
+case "$COMPLEXITY" in
+  low)
+    ZAP_ARGS="-t $TARGET_URL -m 3 -d -J $REPORT_JSON -r $REPORT_HTML --hook=skip_all_ascan"
+    ;;
+  medium)
+    ZAP_ARGS="-t $TARGET_URL -m 5 -d -J $REPORT_JSON -r $REPORT_HTML"
+    ;;
+  high)
+    ZAP_ARGS="-t $TARGET_URL -m 10 -d -J $REPORT_JSON -r $REPORT_HTML"
+    ;;
+  very_high)
+    ZAP_ARGS="-t $TARGET_URL -m 15 -d -J $REPORT_JSON -r $REPORT_HTML --auto"
+    ;;
+  *)
+    ZAP_ARGS="-t $TARGET_URL -d -J $REPORT_JSON -r $REPORT_HTML"
+    ;;
+esac
 
-
-# Start the full scan and export reports
-zap-full-scan.py \
-  -t "$TARGET_URL" \
-  -J "$REPORT_JSON" \
-  -r "$REPORT_HTML" \
-  -d
+ 
+# Start scan with adjusted complexity
+zap-full-scan.py $ZAP_ARGS
 
 sleep 5  # Let daemon stabilize
 

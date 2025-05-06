@@ -24,6 +24,13 @@ class ScanController extends Controller
             'code_file' => 'required|file'
         ]);
 
+        $request->validate([
+            'code_file' => 'required|file|mimes:py,java,js',
+        ]);
+        
+        $complexity = $request->input('complexity'); // <-- added line
+        Log::info("Static scan complexity level: $complexity");
+
         $uploadedFile = $request->file('code_file');
         $filename = time() . '_' . $uploadedFile->getClientOriginalName();
         $uploadedFile->storeAs('scans', $filename);
@@ -53,8 +60,14 @@ class ScanController extends Controller
 
     $targetUrl = $request->input('target_url');
     $tool = $request->input('tool'); // ✅ add this line
+ 
+    $complexity = $request->input('complexity', 'medium'); // fallback default
+    Log::info("Dynamic scan complexity level: $complexity");
 
+    
     $hostMode = env('DOCKER_HOST_MODE', 'linux');
+
+    Log::info("Inputs received - Target URL: $targetUrl, Tool: $tool, Complexity: $complexity, Host Mode: $hostMode");
 
 
     //helped by the env variable to determin the host mode
@@ -76,8 +89,8 @@ class ScanController extends Controller
     Log::info("running $tool scan on url: $targetUrl");
 
     return match ($tool) {
-        'zap' => $this->runZapScan($targetUrl),
-        'nikto' => $this->runNiktoScan($targetUrl),
+        'zap' => $this->runZapScan($targetUrl, $complexity),
+        'nikto' => $this->runNiktoScan($targetUrl, $complexity),
         default => response()->json(['error' => 'Invalid scan tool'], 400),
     };
 }
@@ -124,7 +137,7 @@ class ScanController extends Controller
     
    
     //Run Analyisis with Owasp Zap based on a provided URL
-    public function runZapScan(string $targetUrl)
+    public function runZapScan(string $targetUrl, string $complexity = 'medium')
     {
         Log::info("running zap scan on url: $targetUrl");
         $reportDir = storage_path('zap_reports');
@@ -141,11 +154,17 @@ class ScanController extends Controller
         $cmd = "docker run --rm " .
             "--user " . posix_getuid() . ":" . posix_getgid() . " " .
             "-v " . escapeshellarg($reportDir) . ":/zap/wrk " .
-            "zap-scanner run_zap.sh " . escapeshellarg($targetUrl);
+            "zap-scanner run_zap.sh " . escapeshellarg($targetUrl) . " " . escapeshellarg($complexity);
+
 
         Log::info("Running ZAP command: $cmd");
 
         exec($cmd, $output, $status);
+
+        Log::info("Finished ZAP command. Status: $status");
+        Log::debug("ZAP Output: " . implode("\n", $output));
+
+
 
         if ($status !== 0 || !file_exists($reportFile)) {
             return response()->json([
@@ -188,14 +207,23 @@ class ScanController extends Controller
 
         try {
             Log::info("Attempting to render result view with alerts: " . count($alerts));
-            return view('result', [
+
+            // DEBUG: Dump the first alert to ensure data is present and correctly structured
+
+             Log::debug("First alert: " . json_encode($alerts[0] ?? 'No alerts'));
+
+            return view('results', [
                 'results' => $alerts,
                 'tool' => 'zap',
                 'scan_id' => $scan->id,
             ]);
         } catch (\Throwable $e) {
             Log::error("Error rendering result view: " . $e->getMessage());
-            return response()->json(['error' => 'Failed to render results'], 500);
+           return response()->json([
+                'error' => 'Failed to render results',
+                'exception' => $e->getMessage(),
+                'alerts_sample' => array_slice($alerts, 0, 1),
+            ], 500);
         }
 
     }

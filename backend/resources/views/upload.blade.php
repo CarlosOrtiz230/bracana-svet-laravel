@@ -14,23 +14,36 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <div class="row">
-        <!-- Static Analysis -->
-        <div class="col-md-6">
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">Static Analysis</h5>
-                    <p class="card-text">Upload a source code file for scanning (e.g., Python, Java, JavaScript).</p>
-                    <form method="POST" action="{{ route('scan.static') }}" enctype="multipart/form-data">
-                        @csrf
-                        <div class="mb-3">
-                            <input type="file" class="form-control" name="code_file" accept=".py,.java,.js" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Run Static Scan</button>
-                    </form>
-                </div>
+    <!-- Static Analysis -->
+    <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Static Analysis</h5>
+                <p class="card-text">Upload a source code file for scanning (e.g., Python, Java, JavaScript).</p>
+                <form method="POST" action="{{ route('scan.static') }}" enctype="multipart/form-data">
+                    @csrf
+                    <div class="mb-3">
+                        <input type="file" class="form-control" name="code_file" accept=".py,.java,.js" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="complexity_static" class="form-label">Complexity of Analysis:</label>
+                        <select class="form-select" name="complexity" id="complexity_static" required>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="very_high">Very High</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Run Static Scan</button>
+                </form>
             </div>
         </div>
+    </div>
+
+
+
 
         <!-- Dynamic Analysis -->
         <div class="col-md-6">
@@ -49,7 +62,19 @@
                             <option value="nikto">Nikto</option>
                         </select>
 
+                        <div class="mb-3">
+                            <label for="complexity_dynamic" class="form-label">Complexity of Analysis:</label>
+                            <select class="form-select" name="complexity" id="complexity_dynamic" required>
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="very_high">Very High</option>
+                            </select>
+                        </div>
+
+
                         <button type="submit">Run Scan</button>
+                        
                     </form>
 
                 </div>
