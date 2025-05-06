@@ -156,9 +156,14 @@ class ScanController extends Controller
         //     "-v " . escapeshellarg($reportDir) . ":/zap/wrk " .
         //     "zap-scanner run_zap.sh " . escapeshellarg($targetUrl) . " " . escapeshellarg($complexity);
 
-        $cmd .= " > /dev/null 2>&1 &";
-        exec($cmd);
-        Log::info("ZAP scan command sent to background.");
+        $cmd = "docker run --rm " .
+        "--user " . posix_getuid() . ":" . posix_getgid() . " " .
+        "-v " . escapeshellarg($reportDir) . ":/zap/wrk " .
+        "zap-scanner run_zap.sh " . escapeshellarg($targetUrl) . " " . escapeshellarg($complexity);
+    
+    // Now you can safely append to it
+    $cmd .= " > /dev/null 2>&1 &";
+    
 
 
 

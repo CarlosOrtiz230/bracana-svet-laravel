@@ -1,43 +1,75 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Scan Results</title>
+    <meta charset="UTF-8">
+    <title>Scan Results - BRANACA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        .scan-item { margin-bottom: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-        .severity { font-weight: bold; color: darkred; }
+        body {
+            background-color: #f8f9fa;
+            padding: 2rem;
+        }
+        .severity-badge {
+            font-size: 0.9rem;
+            padding: 0.35em 0.75em;
+            border-radius: 0.5rem;
+        }
+        .severity-low { background-color: #d4edda; color: #155724; }
+        .severity-medium { background-color: #fff3cd; color: #856404; }
+        .severity-high { background-color: #f8d7da; color: #721c24; }
+        .severity-unknown { background-color: #d1ecf1; color: #0c5460; }
     </style>
 </head>
 <body>
-    <h1>Scan Results</h1>
-
-    @if(!empty($tool))
-        <h3>Tool Used: {{ strtoupper($tool) }}</h3>
-    @endif
+<div class="container">
+    <div class="text-center mb-4">
+        <h1 class="display-5">🔍 Scan Results</h1>
+        @if(!empty($tool))
+            <h5 class="text-muted">Tool Used: <strong>{{ strtoupper($tool) }}</strong></h5>
+        @endif
+    </div>
 
     @if(is_array($results) && count($results))
-        <ul>
+        <div class="row row-cols-1 row-cols-md-2 g-4">
             @foreach($results as $item)
-                <li class="scan-item">
-                    <div class="severity">
-                        <strong>Severity:</strong> {{ $item['risk'] ?? $item['severity'] ?? 'Unknown' }}
+                @php
+                    $severity = strtolower($item['risk'] ?? $item['severity'] ?? 'unknown');
+                    $badgeClass = match($severity) {
+                        'low' => 'severity-low',
+                        'medium' => 'severity-medium',
+                        'high', 'very high' => 'severity-high',
+                        default => 'severity-unknown'
+                    };
+                @endphp
+                <div class="col">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                {{ $item['alert'] ?? $item['message'] ?? 'No alert title' }}
+                            </h5>
+                            <span class="severity-badge {{ $badgeClass }}">
+                                {{ ucfirst($severity) }}
+                            </span>
+                            @if(!empty($item['description']))
+                                <p class="mt-3">{{ $item['description'] }}</p>
+                            @endif
+                            @if(!empty($item['uri']))
+                                <p class="text-muted mb-0"><strong>URI:</strong> {{ $item['uri'] }}</p>
+                            @endif
+                        </div>
                     </div>
-                    <div>
-                        <strong>Alert:</strong> {{ $item['alert'] ?? $item['message'] ?? 'No details' }}
-                    </div>
-                    @if(!empty($item['description']))
-                        <div><strong>Description:</strong> {{ $item['description'] }}</div>
-                    @endif
-                    @if(!empty($item['uri']))
-                        <div><strong>URI:</strong> {{ $item['uri'] }}</div>
-                    @endif
-                </li>
+                </div>
             @endforeach
-        </ul>
+        </div>
     @else
-        <p>No issues found or invalid report format.</p>
+        <div class="alert alert-info text-center">
+            No issues found or the report format is invalid.
+        </div>
     @endif
 
-    <p><a href="{{ url('/') }}">Run another scan</a></p>
+    <div class="text-center mt-4">
+        <a href="{{ url('/') }}" class="btn btn-outline-primary">🔁 Run Another Scan</a>
+    </div>
+</div>
 </body>
 </html>
