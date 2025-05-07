@@ -2,8 +2,9 @@
 set -e
 
 TARGET_URL="$1"
-COMPLEXITY="${2:-medium}"   # Default to medium if not given
-OUTPUT_DIR="${2:-/zap/wrk}"  # Default to /zap/wrk if not given
+COMPLEXITY="${2:-medium}"             # Correct default for complexity
+OUTPUT_DIR="${3:-/zap/wrk}"           # Correct third arg fallback
+
 
 
 if [ -z "$TARGET_URL" ]; then
@@ -43,7 +44,10 @@ esac
 
  
 # Start scan with adjusted complexity
-zap-full-scan.py $ZAP_ARGS
+#zap-full-scan.py $ZAP_ARGS
+timeout 160s zap-full-scan.py $ZAP_ARGS
+
+
 
 sleep 5  # Let daemon stabilize
 

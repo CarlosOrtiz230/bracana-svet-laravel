@@ -6,6 +6,8 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MetricsController;
 use App\Http\Controllers\EducationalController;
 use App\Http\Controllers\ZapScanController;
+use App\Models\ZapScan;
+// use App\Models\NiktoScan;
 
 // Main scanner interface
 Route::get('/', [ScanController::class, 'index'])->name('upload');
@@ -42,3 +44,16 @@ Route::resource('zap-scans', ZapScanController::class)->only(['store', 'show']);
 //educational one 
 
 Route::post('/educational/nikto', [EducationalController::class, 'explainNiktoFindings'])->name('educational.nikto');
+
+
+//History
+Route::get('/scan/history', [ScanController::class, 'history'])->name('scan.history');
+Route::get('/scan/zap/{id}', function ($id) {
+    $scan = ZapScan::findOrFail($id);
+    return view('results', ['results' => $scan->findings, 'tool' => 'zap', 'scan_id' => $scan->id]);
+})->name('scan.results.zap');
+
+// Route::get('/scan/nikto/{id}', function ($id) {
+//     $scan =  NiktoScan::findOrFail($id);
+//     return view('results', ['results' => $scan->findings, 'tool' => 'nikto', 'scan_id' => $scan->id]);
+// })->name('scan.results.nikto');

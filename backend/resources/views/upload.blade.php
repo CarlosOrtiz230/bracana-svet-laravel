@@ -110,7 +110,7 @@
 </div>
 
 <!-- Global Loading Spinner -->
-<div id="loadingSpinner" class="position-fixed top-0 start-0 w-100 h-100 d-none flex-column justify-content-center align-items-center bg-white bg-opacity-75" style="z-index: 1050;">
+{{-- <div id="loadingSpinner" class="position-fixed top-0 start-0 w-100 h-100 d-none flex-column justify-content-center align-items-center bg-white bg-opacity-75" style="z-index: 1050;">
     <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;" role="status">
         <span class="visually-hidden">Scanning...</span>
     </div>
@@ -120,7 +120,7 @@
         <span class="dot-animation">.</span>
         <span class="dot-animation">.</span>
     </div>
-</div>
+</div> --}}
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {

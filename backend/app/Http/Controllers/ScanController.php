@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use App\Models\ZapScan;
+use App\Models\NiktoScan;
 
 
  
@@ -151,18 +152,12 @@ class ScanController extends Controller
         
         Log::info("creating cmd command");
         // Run ZAP Docker container
-        // $cmd = "docker run --rm " .
-        //     "--user " . posix_getuid() . ":" . posix_getgid() . " " .
-        //     "-v " . escapeshellarg($reportDir) . ":/zap/wrk " .
-        //     "zap-scanner run_zap.sh " . escapeshellarg($targetUrl) . " " . escapeshellarg($complexity);
-
         $cmd = "docker run --rm " .
-        "--user " . posix_getuid() . ":" . posix_getgid() . " " .
-        "-v " . escapeshellarg($reportDir) . ":/zap/wrk " .
-        "zap-scanner run_zap.sh " . escapeshellarg($targetUrl) . " " . escapeshellarg($complexity);
-    
-    // Now you can safely append to it
-    $cmd .= " > /dev/null 2>&1 &";
+            "--user " . posix_getuid() . ":" . posix_getgid() . " " .
+            "-v {$reportDir}:/zap/wrk " .
+            "zap-scanner run_zap.sh {$targetUrl} {$complexity}";
+
+         
     
 
 
@@ -237,6 +232,14 @@ class ScanController extends Controller
         }
 
     }
+    public function history()
+    {
+        $zapScans = ZapScan::orderBy('created_at', 'desc')->get();
+        $niktoScans = NiktoScan::orderBy('created_at', 'desc')->get();
+ 
+        return view('history', compact('zapScans', 'niktoScans'));
+    }
+
 
 
 }
