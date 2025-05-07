@@ -3,83 +3,67 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
 
 class MetricsController extends Controller
 {
-    public function analyzeNiktoHtml(Request $request)
+    protected array $severityScores = [
+        'informational' => 0,
+        'low' => 1,
+        'medium' => 3,
+        'high' => 5,
+    ];
+
+    public function analyze(Request $request)
     {
-        $request->validate([
-            'filename' => 'required|string'
-        ]);
+        $results = $request->input('results'); // expects a JSON array
+        $tool = $request->input('tool');
 
-        $filename = $request->input('filename');
-        $fullPath = storage_path("app/scans/nikto/$filename");
+        $score = 0;
+        $toolBreakdown = [
+            'zap' => 0,
+            'nikto' => 0,
+            'semgrep' => 0,
+            'codeql' => 0,
+        ];
+        $severityBreakdown = [
+            'low' => 0,
+            'medium' => 0,
+            'high' => 0,
+        ];
 
-        if (!file_exists($fullPath)) {
-            return response()->json(['error' => 'File not found'], 404);
-        }
+        foreach ($results as $finding) {
+            $severity = $this->extractSeverity($finding, $tool);
+            $score += $this->severityScores[$severity] ?? 0;
 
-        libxml_use_internal_errors(true);
-        $doc = new \DOMDocument();
-        $doc->loadHTMLFile($fullPath);
-        libxml_clear_errors();
-
-        $tables = $doc->getElementsByTagName('table');
-        $vulns = [];
-
-        foreach ($tables as $table) {
-            if ($table->getAttribute('class') !== 'dataTable') continue;
-
-            $rows = $table->getElementsByTagName('tr');
-            $entry = [];
-            foreach ($rows as $row) {
-                $cells = $row->getElementsByTagName('td');
-                if ($cells->length === 2) {
-                    $key = trim($cells[0]->nodeValue);
-                    $val = trim($cells[1]->nodeValue);
-                    $entry[$key] = $val;
-                }
-            }
-
-            if (isset($entry['URI'], $entry['Description'])) {
-                $entry['Severity'] = $this->categorizeSeverity($entry['Description']);
-                $vulns[] = $entry;
+            $toolBreakdown[$tool] += $this->severityScores[$severity] ?? 0;
+            if (isset($severityBreakdown[$severity])) {
+                $severityBreakdown[$severity]++;
             }
         }
 
         return response()->json([
-            'total_findings' => count($vulns),
-            'metrics' => $this->groupBySeverity($vulns),
-            'details' => $vulns
+            'total_score' => $score,
+            'by_tool' => $toolBreakdown,
+            'by_severity' => $severityBreakdown,
         ]);
     }
 
-    private function categorizeSeverity($description)
+    protected function extractSeverity(array $item, string $tool): string
     {
-        $desc = strtolower($description);
-        if (str_contains($desc, 'xss') || str_contains($desc, 'injection')) {
-            return 'High';
-        } elseif (str_contains($desc, 'information disclosure') || str_contains($desc, 'headers missing')) {
-            return 'Medium';
-        } elseif (str_contains($desc, 'interesting') || str_contains($desc, 'not set')) {
-            return 'Low';
-        }
-        return 'Info';
+        return match ($tool) {
+            'zap' => strtolower(trim(strtok($item['riskdesc'] ?? 'unknown', ' '))),
+            'nikto' => $this->guessNiktoSeverity($item),
+            'semgrep' => strtolower($item['severity'] ?? 'low'),
+            'codeql' => strtolower($item['severity'] ?? 'warning'),
+            default => 'informational'
+        };
     }
 
-    private function groupBySeverity($vulns)
+    protected function guessNiktoSeverity(array $item): string
     {
-        $counts = ['Critical' => 0, 'High' => 0, 'Medium' => 0, 'Low' => 0, 'Info' => 0];
-        foreach ($vulns as $v) {
-            $severity = $v['Severity'] ?? 'Info';
-            if (isset($counts[$severity])) {
-                $counts[$severity]++;
-            } else {
-                $counts['Info']++;
-            }
-        }
-        return $counts;
+        // crude example: use keywords or OSVDB tag
+        $text = strtolower($item['msg'] ?? '');
+        return str_contains($text, 'critical') || str_contains($text, 'remote') ? 'high' :
+               (str_contains($text, 'insecure') || str_contains($text, 'exposed') ? 'medium' : 'low');
     }
 }

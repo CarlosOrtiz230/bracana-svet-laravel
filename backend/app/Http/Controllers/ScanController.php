@@ -43,6 +43,11 @@ class ScanController extends Controller
         $command = "docker run --rm -v " . dirname($inputPath) . ":/scans bracana-zap bash -c 'run_zap.sh /scans/{$filename} /scans/report.json'";
         exec($command, $output, $status);
 
+        Log::debug("ZAP Output: " . implode("\n", $output));
+        Log::debug("Checking for file: $reportFile");
+        Log::debug("File exists? " . (file_exists($reportFile) ? 'yes' : 'no'));
+
+
         if (!file_exists($reportFile)) {
             Log::error("ZAP report file not found at: $reportFile");
             return response()->json(['error' => 'Report not generated.'], 500);

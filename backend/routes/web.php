@@ -43,7 +43,9 @@ Route::resource('zap-scans', ZapScanController::class)->only(['store', 'show']);
 
 //educational one 
 
-Route::post('/educational/nikto', [EducationalController::class, 'explainNiktoFindings'])->name('educational.nikto');
+Route::post('/educational-guidance', [EducationalController::class, 'generateGuidance']);
+Route::get('/educate/{tool}/{id}', [ EducationalController::class, 'educateFromStorage'])->name('educate.fromStorage');
+
 
 
 //History
@@ -57,3 +59,7 @@ Route::get('/scan/zap/{id}', function ($id) {
 //     $scan =  NiktoScan::findOrFail($id);
 //     return view('results', ['results' => $scan->findings, 'tool' => 'nikto', 'scan_id' => $scan->id]);
 // })->name('scan.results.nikto');
+
+
+//IA
+Route::post('/educational/ai-comment', [EducationalController::class, 'aiComment'])->name('educational.aiComment');

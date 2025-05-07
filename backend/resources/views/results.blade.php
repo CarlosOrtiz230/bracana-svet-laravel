@@ -33,7 +33,12 @@
         <div class="row row-cols-1 row-cols-md-2 g-4">
             @foreach($results as $item)
                 @php
-                    $severity = strtolower($item['risk'] ?? $item['severity'] ?? 'unknown');
+            
+                    // Grab severity from riskdesc (e.g., "Medium (High)") and fallback if missing
+                     $raw = $item['riskdesc'] ?? $item['risk'] ?? $item['severity'] ?? 'unknown';
+
+                   // Extract first word, lowercase it
+                    $severity = strtolower(trim(strtok($raw, ' ')));
                     $badgeClass = match($severity) {
                         'low' => 'severity-low',
                         'medium' => 'severity-medium',
@@ -66,6 +71,11 @@
             No issues found or the report format is invalid.
         </div>
     @endif
+
+    <a href="{{ route('educate.fromStorage', ['tool' => $tool, 'id' => $scan_id]) }}" class="btn btn-outline-info mt-3">
+        📘 View Educational Summary
+    </a>
+    
 
     <div class="text-center mt-4">
         <a href="{{ url('/') }}" class="btn btn-outline-primary">🔁 Run Another Scan</a>

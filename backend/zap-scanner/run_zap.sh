@@ -44,12 +44,12 @@ esac
 
  
 # Start scan with adjusted complexity
-#zap-full-scan.py $ZAP_ARGS
-timeout 160s zap-full-scan.py $ZAP_ARGS
+zap-full-scan.py $ZAP_ARGS
+# timeout 160s zap-full-scan.py $ZAP_ARGS
 
 
 
-sleep 5  # Let daemon stabilize
+#sleep 5  # Let daemon stabilize
 
 ZAP_PORT=$(cat /zap/zap.port)
 

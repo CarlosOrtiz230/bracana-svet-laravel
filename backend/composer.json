@@ -10,7 +10,8 @@
         "guzzlehttp/guzzle": "^7.9",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
-        "laravel/ui": "^4.6"
+        "laravel/ui": "^4.6",
+        "openai-php/client": "^0.12.0"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.15",
