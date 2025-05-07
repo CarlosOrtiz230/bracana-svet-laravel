@@ -138,6 +138,48 @@ Visit: [http://localhost:8000](http://localhost:8000)
 
 ---
 
+
+## 📡 Testing Targets (Public IPs and Dummy Sites)
+
+For dynamic testing, we used both dummy apps and public intentionally vulnerable targets:
+
+### 🧪 Local Dummy Apps
+
+- **Flask + SvelteKit Vulnerable App (locally hosted)**  
+  Includes 11 known vulnerabilities such as SQLi, XSS, command injection, and missing auth.  
+  Runs at:  
+  - Flask backend: `http://localhost:5000`  
+  - SvelteKit frontend: `http://localhost:5173`
+
+- **DVWA (Damn Vulnerable Web Application)**  
+  GitHub: [https://github.com/digininja/DVWA](https://github.com/digininja/DVWA)  
+  Optional local Docker setup or XAMPP install
+
+### 🌐 Public Test Sites (Vulnerable on Purpose)
+
+Use responsibly — only for educational testing:
+
+- **Juice Shop (OWASP)**  
+  URL: [https://juice-shop.herokuapp.com](https://juice-shop.herokuapp.com)  
+  Docker:  
+  ```bash
+  docker run --rm -p 3000:3000 bkimminich/juice-shop
+  ```
+
+- **bWAPP (buggy Web App)**  
+  Website: [http://www.itsecgames.com](http://www.itsecgames.com)  
+  Docker:  
+  ```bash
+  docker pull raesene/bwapp
+  ```
+
+- **Hackazon** (Magento-like vulnerable e-commerce site)  
+  Docker repo: [https://github.com/rapid7/hackazon](https://github.com/rapid7/hackazon)
+
+- **Testfire.net** (Legacy web app used in DAST testing)  
+  URL: [http://testfire.net](http://testfire.net)
+
+
 ## 🛠 Running Scans
 
 * **Static Scan**: Upload `.py`, `.js`, or `.java` files.
