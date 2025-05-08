@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use App\Models\ZapScan;
 use App\Models\NiktoScan;
-
+use App\Services\NiktoHtmlParser;
 
  
 
@@ -237,6 +237,90 @@ class ScanController extends Controller
         }
 
     }
+
+
+    public function runNiktoScan(string $targetUrl, string $complexity = 'medium')
+    {
+        Log::info("Starting Nikto scan on URL: $targetUrl with complexity: $complexity");
+
+        $reportDir = storage_path('nikto_reports');
+        Log::debug("Report directory: $reportDir");
+
+        if (!is_dir($reportDir)) {
+            Log::info("Report directory does not exist. Creating directory: $reportDir");
+            mkdir($reportDir, 0755, true);
+        }
+
+        $timestamp = date("Y-m-d_H-i-s");
+        $jsonReport = "$reportDir/nikto_report_{$timestamp}.json";
+        $htmlReport = "$reportDir/nikto_report_{$timestamp}.html";
+
+        Log::debug("Generated report paths - JSON: $jsonReport, HTML: $htmlReport");
+
+        // $cmd = "docker run --rm " .
+        //     "--user " . posix_getuid() . ":" . posix_getgid() . " " .
+        //     "-e HOST_UID=" . posix_getuid() . " -e HOST_GID=" . posix_getgid() . " " .
+        //     "-v {$reportDir}:/nikto/wrk " .
+        //     "bracana-nikto {$targetUrl}";
+
+
+
+        $cmd = "docker run --rm " .
+            "-v {$reportDir}:/nikto/wrk " .
+            "bracana-nikto {$targetUrl}";
+
+        Log::info("Creating Nikto command " .   $cmd);
+
+       
+        exec($cmd, $output, $status);
+
+        Log::info("Nikto command execution completed. Status: $status");
+        Log::debug("Nikto command output: " . implode("\n", $output));
+
+        if ($status !== 0 || !file_exists($htmlReport)) {
+            Log::error("Nikto scan failed or HTML report not found. Status: $status, HTML Report Path: $htmlReport");
+            return response()->json(['error' => 'Nikto scan failed.'], 500);
+        }
+
+        Log::info("Parsing HTML report: $htmlReport");
+        $parsedFindings = NiktoHtmlParser::parse($htmlReport);
+
+        if (empty($parsedFindings)) {
+            Log::warning("Parsed findings are empty. Check the HTML report for issues.");
+        } else {
+            Log::info("Parsed findings successfully. Total findings: " . count($parsedFindings));
+        }
+
+        $rawJson = file_exists($jsonReport) ? file_get_contents($jsonReport) : '';
+        if ($rawJson) {
+            Log::info("Raw JSON report found and loaded: $jsonReport");
+        } else {
+            Log::warning("Raw JSON report not found. Falling back to parsed HTML findings.");
+        }
+
+        Log::info("Saving Nikto scan results to the database.");
+        $scan = NiktoScan::create([
+            'target_url' => $targetUrl,
+            'findings' => $parsedFindings,
+            'raw_output' => $rawJson ?: 'No JSON available. Parsed from HTML.',
+        ]);
+
+        if ($scan) {
+            Log::info("Nikto scan saved successfully. Scan ID: " . $scan->id);
+        } else {
+            Log::error("Failed to save Nikto scan to the database.");
+            return response()->json(['error' => 'Database insert failed.'], 500);
+        }
+
+        Log::info("Rendering results view for Nikto scan. Scan ID: " . $scan->id);
+        return view('results', [
+            'results' => $parsedFindings,
+            'tool' => 'nikto',
+            'scan_id' => $scan->id,
+        ]);
+    }
+
+
     public function history()
     {
         $zapScans = ZapScan::orderBy('created_at', 'desc')->get();

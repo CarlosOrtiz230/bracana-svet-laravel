@@ -7,7 +7,7 @@ use App\Http\Controllers\MetricsController;
 use App\Http\Controllers\EducationalController;
 use App\Http\Controllers\ZapScanController;
 use App\Models\ZapScan;
-// use App\Models\NiktoScan;
+use App\Models\NiktoScan;
 
 // Main scanner interface
 Route::get('/', [ScanController::class, 'index'])->name('upload');
@@ -55,10 +55,15 @@ Route::get('/scan/zap/{id}', function ($id) {
     return view('results', ['results' => $scan->findings, 'tool' => 'zap', 'scan_id' => $scan->id]);
 })->name('scan.results.zap');
 
-// Route::get('/scan/nikto/{id}', function ($id) {
-//     $scan =  NiktoScan::findOrFail($id);
-//     return view('results', ['results' => $scan->findings, 'tool' => 'nikto', 'scan_id' => $scan->id]);
-// })->name('scan.results.nikto');
+Route::get('/scan/nikto/{id}', function ($id) {
+    $scan = \App\Models\NiktoScan::findOrFail($id);
+    return view('results', [
+        'results' => $scan->findings,
+        'tool' => 'nikto',
+        'scan_id' => $scan->id
+    ]);
+})->name('scan.results.nikto');
+
 
 
 //IA
