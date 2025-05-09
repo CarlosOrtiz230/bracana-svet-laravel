@@ -68,7 +68,9 @@ class EducationalController extends Controller
         return match ($tool) {
             'zap' => $item['desc'] ?? 'No explanation available.',
             'nikto' => $item['msg'] ?? 'Generic server misconfiguration.',
-            'semgrep', 'codeql' => $item['extra']['message'] ?? 'Static code issue detected.',
+        
+            'semgrep', 'codeql' => $item['description'] ?? 'Static code issue detected.',
+
             default => 'Unknown tool — no details.'
         };
     }
