@@ -55,7 +55,7 @@ class EducationalController extends Controller
     {
         return match ($tool) {
             'zap' => strtolower(trim(strtok($item['riskdesc'] ?? 'unknown', ' '))),
-            'nikto' => MetricsController::guessNiktoSeverity($item),
+            'nikto' => (new MetricsController())->guessNiktoSeverity($item),
 
             'semgrep' => strtolower($item['severity'] ?? 'low'),
             'codeql' => strtolower($item['severity'] ?? 'warning'),

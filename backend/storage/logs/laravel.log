@@ -1,14 +1,201 @@
- [2025-05-09 16:31:39] local.INFO: view upload  
-[2025-05-09 16:47:17] local.INFO: Running static analysis with tool: semgrep, complexity: medium  
-[2025-05-09 16:47:17] local.INFO: Running Semgrep: docker run --rm -v /home/ssd2mtc/bracana-svet-laravel/backend/storage/semgrep_reports:/src bracana-semgrep /usr/local/bin/run_semgrep.sh /src/1746809237_test_vulnerabilities.java medium /src  
-[2025-05-09 16:47:27] local.INFO: Semgrep findings parsed: 6  
-[2025-05-09 16:47:58] local.INFO: AI Comment Prompt: {"prompt":"You are an educational cybersecurity assistant from BRACANA SVET. A student is reviewing a scan finding:
+ [2025-05-09 17:11:35] local.INFO: based on the input go for a tool to use for dynamic analysis  
+[2025-05-09 17:11:35] local.INFO: Dynamic scan complexity level: low  
+[2025-05-09 17:11:35] local.INFO: Inputs received - Target URL: http://127.0.0.1:5001, Tool: zap, Complexity: low, Host Mode: linux  
+[2025-05-09 17:11:35] local.INFO: running zap scan on url: http://172.17.0.1:5001  
+[2025-05-09 17:11:35] local.INFO: running zap scan on url: http://172.17.0.1:5001  
+[2025-05-09 17:11:35] local.INFO: creating cmd command  
+[2025-05-09 17:11:35] local.INFO: Running ZAP command: docker run --rm --user 1000:1000 -v /home/ssd2mtc/bracana-svet-laravel/backend/storage/zap_reports:/zap/wrk zap-scanner run_zap.sh http://172.17.0.1:5001 low  
+[2025-05-09 17:12:13] local.INFO: Finished ZAP command. Status: 2  
+[2025-05-09 17:12:13] local.DEBUG: ZAP Output: Received target: http://172.17.0.1:5001
+Complexity level: low
+Reports will be saved to: /zap/wrk
+Total of 5 URLs
+PASS: Directory Browsing [0]
+PASS: Vulnerable JS Library (Powered by Retire.js) [10003]
+PASS: In Page Banner Information Leak [10009]
+PASS: Cookie No HttpOnly Flag [10010]
+PASS: Cookie Without Secure Flag [10011]
+PASS: Re-examine Cache-control Directives [10015]
+PASS: Cross-Domain JavaScript Source File Inclusion [10017]
+PASS: Content-Type Header Missing [10019]
+PASS: Information Disclosure - Debug Error Messages [10023]
+PASS: Information Disclosure - Sensitive Information in URL [10024]
+PASS: Information Disclosure - Sensitive Information in HTTP Referrer Header [10025]
+PASS: HTTP Parameter Override [10026]
+PASS: Information Disclosure - Suspicious Comments [10027]
+PASS: Open Redirect [10028]
+PASS: Cookie Poisoning [10029]
+PASS: User Controllable Charset [10030]
+PASS: User Controllable HTML Element Attribute (Potential XSS) [10031]
+PASS: Viewstate [10032]
+PASS: Directory Browsing [10033]
+PASS: Heartbleed OpenSSL Vulnerability (Indicative) [10034]
+PASS: Strict-Transport-Security Header [10035]
+PASS: Server Leaks Information via "X-Powered-By" HTTP Response Header Field(s) [10037]
+PASS: X-Backend-Server Header Information Leak [10039]
+PASS: Secure Pages Include Mixed Content [10040]
+PASS: HTTP to HTTPS Insecure Transition in Form Post [10041]
+PASS: HTTPS to HTTP Insecure Transition in Form Post [10042]
+PASS: User Controllable JavaScript Event (XSS) [10043]
+PASS: Big Redirect Detected (Potential Sensitive Information Leak) [10044]
+PASS: Source Code Disclosure - /WEB-INF Folder [10045]
+PASS: HTTPS Content Available via HTTP [10047]
+PASS: Remote Code Execution - Shell Shock [10048]
+PASS: Content Cacheability [10049]
+PASS: Retrieved from Cache [10050]
+PASS: Relative Path Confusion [10051]
+PASS: X-ChromeLogger-Data (XCOLD) Header Information Leak [10052]
+PASS: Cookie without SameSite Attribute [10054]
+PASS: CSP [10055]
+PASS: X-Debug-Token Information Leak [10056]
+PASS: Username Hash Found [10057]
+PASS: GET for POST [10058]
+PASS: X-AspNet-Version Response Header [10061]
+PASS: PII Disclosure [10062]
+PASS: Backup File Disclosure [10095]
+PASS: Timestamp Disclosure [10096]
+PASS: Hash Disclosure [10097]
+PASS: Source Code Disclosure [10099]
+PASS: User Agent Fuzzer [10104]
+PASS: Weak Authentication Method [10105]
+PASS: HTTP Only Site [10106]
+PASS: Httpoxy - Proxy Header Misuse [10107]
+PASS: Reverse Tabnabbing [10108]
+PASS: Modern Web Application [10109]
+PASS: Dangerous JS Functions [10110]
+PASS: Authentication Request Identified [10111]
+PASS: Session Management Response Identified [10112]
+PASS: Verification Request Identified [10113]
+PASS: Script Served From Malicious Domain (polyfill) [10115]
+PASS: Absence of Anti-CSRF Tokens [10202]
+PASS: Private IP Disclosure [2]
+PASS: Anti-CSRF Tokens Check [20012]
+PASS: HTTP Parameter Pollution [20014]
+PASS: Heartbleed OpenSSL Vulnerability [20015]
+PASS: Cross-Domain Misconfiguration [20016]
+PASS: Source Code Disclosure - CVE-2012-1823 [20017]
+PASS: Remote Code Execution - CVE-2012-1823 [20018]
+PASS: External Redirect [20019]
+PASS: Session ID in URL Rewrite [3]
+PASS: Buffer Overflow [30001]
+PASS: Format String Error [30002]
+PASS: Integer Overflow Error [30003]
+PASS: CRLF Injection [40003]
+PASS: Parameter Tampering [40008]
+PASS: Server Side Include [40009]
+PASS: Cross Site Scripting (Reflected) [40012]
+PASS: Session Fixation [40013]
+PASS: Cross Site Scripting (Persistent) [40014]
+PASS: Cross Site Scripting (Persistent) - Prime [40016]
+PASS: Cross Site Scripting (Persistent) - Spider [40017]
+PASS: SQL Injection [40018]
+PASS: SQL Injection - MySQL [40019]
+PASS: SQL Injection - Hypersonic SQL [40020]
+PASS: SQL Injection - Oracle [40021]
+PASS: SQL Injection - PostgreSQL [40022]
+PASS: Possible Username Enumeration [40023]
+PASS: SQL Injection - SQLite [40024]
+PASS: Proxy Disclosure [40025]
+PASS: Cross Site Scripting (DOM Based) [40026]
+PASS: SQL Injection - MsSQL [40027]
+PASS: ELMAH Information Leak [40028]
+PASS: Trace.axd Information Leak [40029]
+PASS: Out of Band XSS [40031]
+PASS: .htaccess Information Leak [40032]
+PASS: .env Information Leak [40034]
+PASS: Hidden File Finder [40035]
+PASS: Bypassing 403 [40038]
+PASS: Spring Actuator Information Leak [40042]
+PASS: Log4Shell [40043]
+PASS: Exponential Entity Expansion (Billion Laughs Attack) [40044]
+PASS: Spring4Shell [40045]
+PASS: Server Side Request Forgery [40046]
+PASS: Text4shell (CVE-2022-42889) [40047]
+PASS: Source Code Disclosure - Git [41]
+PASS: Source Code Disclosure - SVN [42]
+PASS: Source Code Disclosure - File Inclusion [43]
+PASS: Script Active Scan Rules [50000]
+PASS: Script Passive Scan Rules [50001]
+PASS: Path Traversal [6]
+PASS: Remote File Inclusion [7]
+PASS: Insecure JSF ViewState [90001]
+PASS: Java Serialization Object [90002]
+PASS: Sub Resource Integrity Attribute Missing [90003]
+PASS: Charset Mismatch [90011]
+PASS: XSLT Injection [90017]
+PASS: Server Side Code Injection [90019]
+PASS: Remote OS Command Injection [90020]
+PASS: XPath Injection [90021]
+PASS: Application Error Disclosure [90022]
+PASS: XML External Entity Attack [90023]
+PASS: Generic Padding Oracle [90024]
+PASS: Expression Language Injection [90025]
+PASS: SOAP Action Spoofing [90026]
+PASS: Cookie Slack Detector [90027]
+PASS: Insecure HTTP Method [90028]
+PASS: SOAP XML Injection [90029]
+PASS: WSDL File Detection [90030]
+PASS: Loosely Scoped Cookie [90033]
+PASS: Cloud Metadata Potentially Exposed [90034]
+PASS: Server Side Template Injection [90035]
+PASS: Server Side Template Injection (Blind) [90036]
+WARN-NEW: Missing Anti-clickjacking Header [10020] x 2
+	http://172.17.0.1:5001/robots.txt (200 OK)
+	http://172.17.0.1:5001/sitemap.xml (200 OK)
+WARN-NEW: X-Content-Type-Options Header Missing [10021] x 2
+	http://172.17.0.1:5001/sitemap.xml (200 OK)
+	http://172.17.0.1:5001/robots.txt (200 OK)
+WARN-NEW: Server Leaks Version Information via "Server" HTTP Response Header Field [10036] x 5
+	http://172.17.0.1:5001/ (404 NOT FOUND)
+	http://172.17.0.1:5001 (404 NOT FOUND)
+	http://172.17.0.1:5001/admin (404 NOT FOUND)
+	http://172.17.0.1:5001/robots.txt (200 OK)
+	http://172.17.0.1:5001/sitemap.xml (200 OK)
+WARN-NEW: Content Security Policy (CSP) Header Not Set [10038] x 5
+	http://172.17.0.1:5001/ (404 NOT FOUND)
+	http://172.17.0.1:5001 (404 NOT FOUND)
+	http://172.17.0.1:5001/admin (404 NOT FOUND)
+	http://172.17.0.1:5001/robots.txt (200 OK)
+	http://172.17.0.1:5001/sitemap.xml (200 OK)
+WARN-NEW: Permissions Policy Header Not Set [10063] x 5
+	http://172.17.0.1:5001/ (404 NOT FOUND)
+	http://172.17.0.1:5001 (404 NOT FOUND)
+	http://172.17.0.1:5001/admin (404 NOT FOUND)
+	http://172.17.0.1:5001/sitemap.xml (200 OK)
+	http://172.17.0.1:5001/robots.txt (200 OK)
+WARN-NEW: Cross-Domain Misconfiguration [10098] x 5
+	http://172.17.0.1:5001/ (404 NOT FOUND)
+	http://172.17.0.1:5001 (404 NOT FOUND)
+	http://172.17.0.1:5001/admin (404 NOT FOUND)
+	http://172.17.0.1:5001/robots.txt (200 OK)
+	http://172.17.0.1:5001/sitemap.xml (200 OK)
+WARN-NEW: CORS Misconfiguration [40040] x 5
+	http://172.17.0.1:5001 (404 NOT FOUND)
+	http://172.17.0.1:5001/ (404 NOT FOUND)
+	http://172.17.0.1:5001/admin (404 NOT FOUND)
+	http://172.17.0.1:5001/sitemap.xml (200 OK)
+	http://172.17.0.1:5001/robots.txt (200 OK)
+WARN-NEW: Insufficient Site Isolation Against Spectre Vulnerability [90004] x 4
+	http://172.17.0.1:5001/sitemap.xml (200 OK)
+	http://172.17.0.1:5001/robots.txt (200 OK)
+	http://172.17.0.1:5001/sitemap.xml (200 OK)
+	http://172.17.0.1:5001/robots.txt (200 OK)
+FAIL-NEW: 0	FAIL-INPROG: 0	WARN-NEW: 8	WARN-INPROG: 0	INFO: 0	IGNORE: 0	PASS: 129  
+[2025-05-09 17:12:30] local.INFO: Parsing Nikto HTML report at: /home/ssd2mtc/bracana-svet-laravel/backend/storage/nikto_reports/nikto_report_2025-05-09_17-01-51.html  
+[2025-05-09 17:12:30] local.INFO: Parsed Nikto HTML report. Findings: 9, Target: http://zero.webappsecurity.com:80/  
+[2025-05-09 17:12:46] local.INFO: AI Comment Prompt: {"prompt":"You are an educational cybersecurity assistant from BRACANA SVET. A student is reviewing a scan finding:
 
-Title: Found object deserialization using ObjectInputStream.
-Severity: Low
-Explanation: Found object deserialization using ObjectInputStream. Deserializing entire Java objects is dangerous because malicious actors can create Java object streams with unintended consequences. Ensure that the objects being deserialized are not user-controlled. If this must be done, consider using HMACs to sign the data stream to make sure it is not tampered with, or consider only transmitting object fields and populating a new object.
-Recommendation: Check coding best practices or linting rules.
+Title: Missing Anti-clickjacking Header
+Severity: Medium
+Explanation: <p>The response does not protect against 'ClickJacking' attacks. It should include either Content-Security-Policy with 'frame-ancestors' directive or X-Frame-Options.</p>
+Recommendation: <p>Modern Web browsers support the Content-Security-Policy and X-Frame-Options HTTP headers. Ensure one of them is set on all web pages returned by your site/app.</p><p>If you expect the page to be framed only by pages on your server (e.g. it's part of a FRAMESET) then you'll want to use SAMEORIGIN, otherwise if you never expect the page to be framed, you should use DENY. Alternatively consider implementing Content Security Policy's \"frame-ancestors\" directive.</p>
 
 Give a friendly, short explanation in plain English to help the student understand what’s happening and what they should do to fix it."} 
-[2025-05-09 16:47:58] local.INFO: OpenAI Client: {"client":{"OpenAI\\Client":[]}} 
-[2025-05-09 16:48:07] local.INFO: AI Response: {"response":{"OpenAI\\Responses\\Chat\\CreateResponse":{"id":"chatcmpl-BVLBAfncHGI1fWdYe4Sep5ke2bXi9","object":"chat.completion","created":1746809280,"model":"gpt-4-0613","systemFingerprint":null,"choices":[{"index":0,"message":{"role":"assistant","content":"The scanner found a potential issue in your code where you are 'deserializing' or reassembling whole Java objects. This can potentially be dangerous because hackers can exploit this to create harmful streams of objects. To fix this, make sure any deserialized object isn't under user's control or sign the data stream with HMACs. HMACs help make sure the data hasn't been tampered with. You can also just send individual fields of the object instead of the entire object. A 'linting rule' is a guideline that programmers follow to avoid such issues, so check them to improve your code.","annotations":[],"toolCalls":[],"functionCall":null},"logprobs":null,"finishReason":"stop"}],"usage":{"promptTokens":160,"completionTokens":123,"totalTokens":283,"promptTokensDetails":{"audioTokens":0,"cachedTokens":0},"completionTokensDetails":{"audioTokens":0,"reasoningTokens":0,"acceptedPredictionTokens":0,"rejectedPredictionTokens":0}}}}} 
+[2025-05-09 17:12:46] local.INFO: OpenAI Client: {"client":{"OpenAI\\Client":[]}} 
+[2025-05-09 17:12:55] local.INFO: AI Response: {"response":{"OpenAI\\Responses\\Chat\\CreateResponse":{"id":"chatcmpl-BVLZ9xfR8ZnQqXIDMSFdPj0z4pzqu","object":"chat.completion","created":1746810767,"model":"gpt-4-0613","systemFingerprint":null,"choices":[{"index":0,"message":{"role":"assistant","content":"Sure, basically the scan indicates that the web page is vulnerable to a type of attack called 'ClickJacking.' This is when an attacker tricks a user into clicking something different from what the user perceives, which can compromise the security of your web page.
+
+The fix involves adding a safety feature to your web page through HTTP headers - Content-Security-Policy or X-Frame-Options. 
+
+If you expect your page to be included within another page on your same site (i.e., in a frame), you should use an option called SAMEORIGIN. And, if you don't expect your page to be framed at all, use the DENY option. 
+
+Another option is to set up a Content Security Policy's \"frame-ancestors\" directive, which gives you more control over which sites can embed your page. Implementing these will strengthen the security of your website.","annotations":[],"toolCalls":[],"functionCall":null},"logprobs":null,"finishReason":"stop"}],"usage":{"promptTokens":226,"completionTokens":180,"totalTokens":406,"promptTokensDetails":{"audioTokens":0,"cachedTokens":0},"completionTokensDetails":{"audioTokens":0,"reasoningTokens":0,"acceptedPredictionTokens":0,"rejectedPredictionTokens":0}}}}} 
