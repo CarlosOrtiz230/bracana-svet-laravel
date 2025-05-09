@@ -54,7 +54,8 @@ class EducationalController extends Controller
     {
         return match ($tool) {
             'zap' => strtolower(trim(strtok($item['riskdesc'] ?? 'unknown', ' '))),
-            'nikto' => (new MetricsController())->guessNiktoSeverity($item),
+            'nikto' => MetricsController::guessNiktoSeverity($item),
+
             'semgrep' => strtolower($item['severity'] ?? 'low'),
             'codeql' => strtolower($item['severity'] ?? 'warning'),
             default => 'informational'
@@ -179,12 +180,12 @@ class EducationalController extends Controller
     // Function to generate AI comment using OpenAI API
     public function aiComment(Request $request)
     {
-        $prompt = "You are an educational cybersecurity assistant. A student is reviewing a scan finding:\n\n"
+        $prompt = "You are an educational cybersecurity assistant from BRACANA SVET. A student is reviewing a scan finding:\n\n"
             . "Title: {$request->title}\n"
             . "Severity: {$request->severity}\n"
             . "Explanation: {$request->explanation}\n"
             . "Recommendation: {$request->recommendation}\n\n"
-            . "Give a friendly, short explanation in plain English to help the student understand what’s happening and what they should do.";
+            . "Give a friendly, short explanation in plain English to help the student understand what’s happening and what they should do to fix it.";
     
         try {
             Log::info('AI Comment Prompt:', ['prompt' => $prompt]);

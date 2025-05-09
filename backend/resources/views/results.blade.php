@@ -27,6 +27,12 @@
         @if(!empty($tool))
             <h5 class="text-muted">Tool Used: <strong>{{ strtoupper($tool) }}</strong></h5>
         @endif
+        @if(isset($total_score))
+            <h4 class="text-success">💡 Risk Score: <strong>{{ $total_score }}</strong></h4>
+        @endif
+         
+
+
     </div>
 
     @if(is_array($results) && count($results))
@@ -77,9 +83,9 @@
     </a>
     
 
-    <div class="text-center mt-4">
-        <a href="{{ url('/') }}" class="btn btn-outline-primary">🔁 Run Another Scan</a>
-    </div>
+    <a href="{{ route('scan.raw.json', ['tool' => $tool, 'id' => $scan_id]) }}" target="_blank" class="btn btn-outline-secondary mt-2">
+        🧾 View Raw JSON
+    </a>
 </div>
 </body>
 </html>

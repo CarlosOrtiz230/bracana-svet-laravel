@@ -67,6 +67,12 @@ a<!DOCTYPE html>
     <div class="text-center mt-4">
         <a href="{{ url('/') }}" class="btn btn-secondary">🏠 Back to Home</a>
     </div>
+
+    <form method="POST" action="{{ route('scan.recoverStored') }}">
+        @csrf
+        <button type="submit" class="btn btn-warning">Fetch Stored Analyses</button>
+    </form>
+    
 </div>
 </body>
 </html>

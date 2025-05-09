@@ -46,7 +46,8 @@ class ZapScanController extends Controller
      * Display the specified resource.
      */
     public function show(ZapScan $zapScan)
-    {
+    {   
+        Log::info('ZapScanController@show', ['zapScan' => $zapScan]);
         $scan = ZapScan::findOrFail($id);
         return response()->json($scan);
     }

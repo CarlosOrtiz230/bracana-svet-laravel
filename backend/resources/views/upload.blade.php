@@ -103,7 +103,17 @@
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Run Dynamic Scan</button>
                     </form>
+
+                    
                 </div>
+
+            </div>
+
+
+            <div class="d-flex justify-content-end mb-4">
+                <a href="{{ route('scan.history') }}" class="btn btn-outline-secondary shadow-sm">
+                    📜 View Scan History
+                </a>
             </div>
         </div>
     </div>
@@ -122,7 +132,7 @@
     </div>
 </div> --}}
 
-<script>
+{{-- <script>
     document.addEventListener("DOMContentLoaded", function () {
         const forms = document.querySelectorAll("form");
         const spinner = document.getElementById("loadingSpinner");
@@ -144,6 +154,6 @@
             });
         });
     });
-</script>
+</script> --}}
 </body>
 </html>

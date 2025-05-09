@@ -45,7 +45,10 @@ Route::resource('zap-scans', ZapScanController::class)->only(['store', 'show']);
 
 Route::post('/educational-guidance', [EducationalController::class, 'generateGuidance']);
 Route::get('/educate/{tool}/{id}', [ EducationalController::class, 'educateFromStorage'])->name('educate.fromStorage');
-
+Route::get('/scan/raw/{tool}/{id}', function ($tool, $id) {
+    $model = $tool === 'zap' ?  ZapScan::findOrFail($id) :  NiktoScan::findOrFail($id);
+    return response()->json(json_decode($model->raw_output, true));
+})->name('scan.raw.json');
 
 
 //History
@@ -55,16 +58,20 @@ Route::get('/scan/zap/{id}', function ($id) {
     return view('results', ['results' => $scan->findings, 'tool' => 'zap', 'scan_id' => $scan->id]);
 })->name('scan.results.zap');
 
-Route::get('/scan/nikto/{id}', function ($id) {
-    $scan = \App\Models\NiktoScan::findOrFail($id);
-    return view('results', [
-        'results' => $scan->findings,
-        'tool' => 'nikto',
-        'scan_id' => $scan->id
-    ]);
-})->name('scan.results.nikto');
+// Route::get('/scan/nikto/{id}', function ($id) {
+//     $scan =  NiktoScan::findOrFail($id);
+//     return view('results', [
+//         'results' => $scan->findings,
+//         'tool' => 'nikto',
+//         'scan_id' => $scan->id
+//     ]);
+// })->name('scan.results.nikto');
+Route::get('/scan/nikto/{id}', [ScanController::class, 'showNiktoResults'])->name('scan.results.nikto');
 
 
 
 //IA
 Route::post('/educational/ai-comment', [EducationalController::class, 'aiComment'])->name('educational.aiComment');
+
+//recovery path
+Route::post('/scan/recover-stored', [ScanController::class, 'recoverStoredReports'])->name('scan.recoverStored');

@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\File;
 use App\Models\ZapScan;
 use App\Models\NiktoScan;
 use App\Services\NiktoHtmlParser;
-
+use Illuminate\Support\Facades\DB;
  
 
 class ScanController extends Controller
@@ -222,10 +223,11 @@ class ScanController extends Controller
 
              Log::debug("First alert: " . json_encode($alerts[0] ?? 'No alerts'));
 
-            return view('results', [
-                'results' => $alerts,
-                'tool' => 'zap',
+             return view('results', [
+                'results' => $analysis['results'],
+                'tool' => 'nikto',
                 'scan_id' => $scan->id,
+                'total_score' => $analysis['total_score'],
             ]);
         } catch (\Throwable $e) {
             Log::error("Error rendering result view: " . $e->getMessage());
@@ -313,11 +315,16 @@ class ScanController extends Controller
         }
 
         Log::info("Rendering results view for Nikto scan. Scan ID: " . $scan->id);
+
+        // Normalize the results for better display
+        $results = $this->normalizeNiktoResults($parsedFindings); // from NiktoHtmlParser or DB
         return view('results', [
-            'results' => $parsedFindings,
+            'results' => $analysis['results'],
             'tool' => 'nikto',
             'scan_id' => $scan->id,
+            'total_score' => $analysis['total_score'],
         ]);
+        
     }
 
 
@@ -329,6 +336,120 @@ class ScanController extends Controller
         return view('history', compact('zapScans', 'niktoScans'));
     }
 
+    public function recoverStoredReports()
+    {
+        $niktoDir = storage_path('nikto_reports');
+        $zapDir = storage_path('zap_reports');
+    
+        // ✅ Nikto HTML files
+        foreach (File::files($niktoDir) as $file) {
+            if (str_ends_with($file, '.html')) {
+                // 👇 Assume parse() returns [$findings, $target]
+                [$parsedFindings, $targetUrl] = NiktoHtmlParser::parse($file->getPathname());
+                    $rawLabel = 'Recovered from file: ' . $file->getFilename();
+    
+                $existing = \App\Models\NiktoScan::where('raw_output', $rawLabel)->first();
+                if (!$existing) {
+                     NiktoScan::create([
+
+                        'target_url' => $targetUrl ?: 'unknown',
+                        'findings' => $parsedFindings,
+                        'raw_output' => $rawLabel,
+                    ]);
+                }
+            }
+        }
+    
+        // ✅ ZAP JSON files
+        foreach (File::files($zapDir) as $file) {
+            if (str_ends_with($file, '.json')) {
+                $raw = File::get($file);
+                $parsed = json_decode($raw, true);
+                $alerts = $parsed['site'][0]['alerts'] ?? [];
+                $target = $parsed['site'][0]['@name'] ?? 'unknown';
+    
+                $existing = \App\Models\ZapScan::where('raw_output', $raw)->first();
+                if (!$existing) {
+                    \App\Models\ZapScan::create([
+                        'target_url' => $target,
+                        'findings' => $alerts,
+                        'raw_output' => $raw,
+                    ]);
+                }
+            }
+        }
+    
+        return back()->with('success', 'Recovered stored scans successfully.');
+    }
+    
+    private function normalizeNiktoResults(array $results): array
+    {
+        $normalized = [];
+
+        foreach ($results as $item) {
+            $description = $item['msg'] ?? $item['description'] ?? '';
+            $uri = $item['url'] ?? $item['uri'] ?? '';
+            $method = $item['method'] ?? '';
+            $reference = $item['references'] ?? '';
+
+            // Guess severity
+            $severity = $this->guessNiktoSeverity($description);
+
+            $normalized[] = [
+                'alert' => ucfirst(strtok($description, '.')) . '.', // first sentence as title
+                'severity' => $severity,
+                'description' => $description,
+                'uri' => $uri,
+                'method' => $method,
+                'references' => $reference,
+            ];
+        }
+
+        return $normalized;
+    }
+
+    public function showNiktoResults($id)
+    {
+        $scan = NiktoScan::findOrFail($id);
+
+        // Normalize the stored findings
+        $normalized = $this->normalizeNiktoResults($scan->findings ?? []);
+
+        return view('results', [
+            'results' => $normalized,
+            'tool' => 'nikto',
+            'scan_id' => $scan->id,
+        ]);
+    }
+
+    private function guessNiktoSeverity(string $description): string
+    {
+        $description = strtolower($description);
+    
+        // High-risk indicators
+        if (str_contains($description, 'remote file inclusion') ||
+            str_contains($description, 'directory traversal') ||
+            str_contains($description, 'admin login found') ||
+            str_contains($description, 'authentication bypass')) {
+            return 'high';
+        }
+    
+        // Medium-risk indicators
+        if (str_contains($description, 'x-content-type-options') ||
+            str_contains($description, 'strict-transport-security') ||
+            str_contains($description, 'csp') ||
+            str_contains($description, 'referrer-policy') ||
+            str_contains($description, 'methods') ||
+            str_contains($description, 'banner changed') ||
+            str_contains($description, 'clickjacking') ||
+            str_contains($description, 'access-control-allow-origin')) {
+            return 'medium';
+        }
+    
+        // Default to low
+        return 'low';
+    }
+       
 
 
 }

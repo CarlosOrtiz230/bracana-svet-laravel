@@ -24,14 +24,7 @@
 <body>
 <div class="container">
     <div class="text-center mb-5">
-        <h1 class="display-5">📘 Educational Guidance</h1>
-        <p class="text-muted">Tool Used: <strong>{!! strtoupper($tool) !!}</strong></p>
-        <p>Total Score: <strong>{!! $metrics['total_score'] !!}</strong></p>
-        <p>Severity Breakdown: 
-            Low ({!! $metrics['by_severity']['low'] ?? 0 !!}), 
-            Medium ({!! $metrics['by_severity']['medium'] ?? 0 !!}), 
-            High ({!! $metrics['by_severity']['high'] ?? 0 !!})
-        </p>
+        <h1 class="display-5">📘 Educational Guidance</h1> 
     </div>
 
     <div class="row row-cols-1 row-cols-md-2 g-4">

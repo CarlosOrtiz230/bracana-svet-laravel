@@ -31,21 +31,33 @@ class MetricsController extends Controller
             'high' => 0,
         ];
 
-        foreach ($results as $finding) {
+        foreach ($results as &$finding) { // Use reference to modify in-place
             $severity = $this->extractSeverity($finding, $tool);
             $score += $this->severityScores[$severity] ?? 0;
-
+        
             $toolBreakdown[$tool] += $this->severityScores[$severity] ?? 0;
             if (isset($severityBreakdown[$severity])) {
                 $severityBreakdown[$severity]++;
             }
+        
+            // ✅ Inject severity and alert title for UI to pick up
+            if (!isset($finding['severity'])) {
+                $finding['severity'] = $severity;
+            }
+        
+            if (!isset($finding['alert']) && isset($finding['description'])) {
+                $finding['alert'] = ucfirst(substr($finding['description'], 0, 60)) . '...';
+            }
         }
+        
 
         return response()->json([
             'total_score' => $score,
             'by_tool' => $toolBreakdown,
             'by_severity' => $severityBreakdown,
+            'results' => $results,  
         ]);
+        
     }
 
     protected function extractSeverity(array $item, string $tool): string
@@ -59,11 +71,32 @@ class MetricsController extends Controller
         };
     }
 
-    protected function guessNiktoSeverity(array $item): string
-    {
-        // crude example: use keywords or OSVDB tag
-        $text = strtolower($item['msg'] ?? '');
-        return str_contains($text, 'critical') || str_contains($text, 'remote') ? 'high' :
-               (str_contains($text, 'insecure') || str_contains($text, 'exposed') ? 'medium' : 'low');
+    public function guessNiktoSeverity(array $item): string
+{
+    $description = strtolower($item['description'] ?? '');
+
+    // High-risk indicators
+    if (str_contains($description, 'remote file inclusion') ||
+        str_contains($description, 'directory traversal') ||
+        str_contains($description, 'admin login found') ||
+        str_contains($description, 'authentication bypass')) {
+        return 'high';
     }
+
+    // Medium-risk indicators
+    if (str_contains($description, 'x-content-type-options') ||
+        str_contains($description, 'strict-transport-security') ||
+        str_contains($description, 'csp') || // content-security-policy
+        str_contains($description, 'referrer-policy') ||
+        str_contains($description, 'methods') || // allowed http methods
+        str_contains($description, 'banner changed') ||
+        str_contains($description, 'clickjacking') ||
+        str_contains($description, 'access-control-allow-origin')) {
+        return 'medium';
+    }
+
+    // Anything else = low
+    return 'low';
+}
+
 }
