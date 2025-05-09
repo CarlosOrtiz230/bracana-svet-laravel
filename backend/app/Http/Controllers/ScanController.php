@@ -10,7 +10,7 @@ use App\Models\ZapScan;
 use App\Models\NiktoScan;
 use App\Services\NiktoHtmlParser;
 use Illuminate\Support\Facades\DB;
- 
+use App\Models\SemgrepScan; 
 
 class ScanController extends Controller
 {
@@ -106,40 +106,17 @@ class ScanController extends Controller
     // Run Static Analyisi
     public function runStatic(Request $request)
     {
-        // Validate uploaded file type
-        $request->validate([
-            'code_file' => 'required|file|mimes:py,java,js',
-        ]);
+        $tool = $request->input('tool');
+        $complexity = $request->input('complexity', 'medium');
+        //open to add more tools
+        Log::info("Running static analysis with tool: $tool, complexity: $complexity");
 
-        $file = $request->file('code_file');
-        $filename = $file->getClientOriginalName();
-        $filepath = $file->storeAs('scans/semgrep', $filename);
-
-        // ✅ Use full path for Docker volume
-        $hostPath = storage_path("app/scans/semgrep");
-
-        // ✅ Log the start of the static scan
-        Log::info("Starting static scan for file: $filename");
-
-        // ✅ Run Semgrep in Docker
-        $cmd = "docker run --rm -v " .
-            escapeshellarg($hostPath) . ":/src " .
-            "returntocorp/semgrep semgrep --config=auto /src/$filename -o /src/semgrep_result_$filename.json --json";
-
-        Log::info("Running Semgrep command: $cmd");
-        exec($cmd, $output, $status);
-
-        if ($status !== 0) {
-            Log::error("Static scan failed for file: $filename. Command status: $status");
-            return back()->with('error', 'Static scan failed to run.');
-        }
-
-        // ✅ Log the completion of the static scan
-        $resultPath = "scans/semgrep/semgrep_result_$filename.json";
-        Log::info("Static scan completed successfully for file: $filename. Results saved to: $resultPath");
-
-        return back()->with('success', 'Static scan completed!');
+        return match ($tool) {
+            'semgrep' => $this->runSemgrep($request, $complexity),
+            default => back()->with('error', 'Unsupported static analysis tool.'),
+        };
     }
+
 
     
    
@@ -328,13 +305,17 @@ class ScanController extends Controller
     }
 
 
+    
+
     public function history()
     {
         $zapScans = ZapScan::orderBy('created_at', 'desc')->get();
         $niktoScans = NiktoScan::orderBy('created_at', 'desc')->get();
- 
-        return view('history', compact('zapScans', 'niktoScans'));
+        $semgrepScans = SemgrepScan::orderBy('created_at', 'desc')->get(); // ✅ Add this
+
+        return view('history', compact('zapScans', 'niktoScans', 'semgrepScans')); // ✅ Include
     }
+
 
     public function recoverStoredReports()
     {
@@ -348,7 +329,7 @@ class ScanController extends Controller
                 [$parsedFindings, $targetUrl] = NiktoHtmlParser::parse($file->getPathname());
                     $rawLabel = 'Recovered from file: ' . $file->getFilename();
     
-                $existing = \App\Models\NiktoScan::where('raw_output', $rawLabel)->first();
+                $existing =  NiktoScan::where('raw_output', $rawLabel)->first();
                 if (!$existing) {
                      NiktoScan::create([
 
@@ -368,9 +349,9 @@ class ScanController extends Controller
                 $alerts = $parsed['site'][0]['alerts'] ?? [];
                 $target = $parsed['site'][0]['@name'] ?? 'unknown';
     
-                $existing = \App\Models\ZapScan::where('raw_output', $raw)->first();
+                $existing =  ZapScan::where('raw_output', $raw)->first();
                 if (!$existing) {
-                    \App\Models\ZapScan::create([
+                    ZapScan::create([
                         'target_url' => $target,
                         'findings' => $alerts,
                         'raw_output' => $raw,
@@ -450,6 +431,83 @@ class ScanController extends Controller
         return 'low';
     }
        
+    public function runSemgrep(Request $request, string $complexity)
+{
+    $request->validate([
+        'code_file' => 'required|file|mimes:py,java,js',
+    ]);
+
+    $file = $request->file('code_file');
+    $filename = time() . '_' . $file->getClientOriginalName();
+
+    $hostPath = storage_path("semgrep_reports");
+    if (!is_dir($hostPath)) {
+        mkdir($hostPath, 0755, true);
+    }
+
+    // ✅ Move the uploaded file into the folder that will be mounted into Docker
+    $fullFilePath = $hostPath . DIRECTORY_SEPARATOR . $filename;
+    $file->move($hostPath, $filename);
+
+    $baseName = pathinfo($filename, PATHINFO_FILENAME);
+    $outputPath = "$hostPath/semgrep_result_{$baseName}.json";
+
+    $cmd = "docker run --rm -v {$hostPath}:/src " .
+           "bracana-semgrep /usr/local/bin/run_semgrep.sh /src/{$filename} {$complexity} /src";
+
+    Log::info("Running Semgrep: $cmd");
+    exec($cmd, $output, $status);
+
+    if (!file_exists($outputPath)) {
+        Log::error("Semgrep report not found at: $outputPath");
+        return back()->with('error', 'Semgrep scan failed to generate output.');
+    }
+
+    $raw = file_get_contents($outputPath);
+    $parsed = json_decode($raw, true);
+
+    if (!empty($parsed['errors'])) {
+        Log::error("Semgrep scan errors found", ['errors' => $parsed['errors']]);
+        return back()->with('error', 'Semgrep scan failed: ' . ($parsed['errors'][0]['message'] ?? 'Unknown error.'));
+    }
+
+    $results = $parsed['results'] ?? [];
+    Log::info("Semgrep findings parsed: " . count($results));
+
+    $normalized = array_map(function ($item) {
+        return [
+            'alert' => ucfirst(strtok($item['extra']['message'], '.')) . '.',
+            'severity' => strtolower($item['severity'] ?? 'low'),
+            'description' => $item['extra']['message'] ?? '',
+            'uri' => $item['path'] ?? '',
+            'method' => '',
+            'references' => implode(', ', $item['extra']['metadata']['references'] ?? []),
+        ];
+    }, $results);
+
+    $scan = \App\Models\SemgrepScan::create([
+        'target_file' => $filename,
+        'findings' => $normalized,
+        'raw_output' => $raw,
+    ]);
+
+    if (!$scan) {
+        Log::error("Failed to save Semgrep scan.");
+        return back()->with('error', 'Database insert failed.');
+    }
+
+    $totalScore = app(MetricsController::class)->analyzeInline($normalized, 'semgrep');
+
+    return view('results', [
+        'results' => $normalized,
+        'tool' => 'semgrep',
+        'scan_id' => $scan->id,
+        'total_score' => $totalScore,
+    ]);
+}
+
+
+
 
 
 }

@@ -64,6 +64,28 @@ a<!DOCTYPE html>
         @endif
     </div>
 
+    <div class="mt-5">
+        <h4 class="text-danger">🧬 Semgrep Scans</h4>
+        @if($semgrepScans->count())
+            <ul class="list-group">
+                @foreach($semgrepScans as $scan)
+                    <li class="list-group-item scan-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>File:</strong> {{ $scan->target_file}}<br>
+                                <strong>Date:</strong> {{ $scan->created_at->format('Y-m-d H:i') }}
+                            </div>
+                            <a href="{{ route('scan.results.semgrep', $scan->id) }}" class="btn btn-outline-danger btn-sm">View Report</a>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        @else
+            <p class="text-muted">No Semgrep scans available.</p>
+        @endif
+    </div>
+    
+
     <div class="text-center mt-4">
         <a href="{{ url('/') }}" class="btn btn-secondary">🏠 Back to Home</a>
     </div>

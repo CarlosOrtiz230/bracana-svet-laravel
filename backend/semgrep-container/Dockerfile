@@ -1,12 +1,11 @@
-# Use a lightweight Python base
-FROM python:3.10-slim
+FROM returntocorp/semgrep:latest
 
-# Install Semgrep
-RUN pip install --no-cache semgrep
+USER root
 
-# Set your working dir inside the container
-WORKDIR /src
+COPY run_semgrep.sh /usr/local/bin/run_semgrep.sh
+RUN chmod +x /usr/local/bin/run_semgrep.sh
 
-# By default, invoke semgrep CLI
-ENTRYPOINT ["semgrep"]
+# Optional: switch back to semgrep user if desired, but make sure it has write permissions on /src
+# USER semgrep
 
+CMD ["run_semgrep.sh"]

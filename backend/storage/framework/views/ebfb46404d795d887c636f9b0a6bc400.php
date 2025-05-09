@@ -42,9 +42,9 @@
 <div class="container">
     <h1 class="text-center mb-5 text-primary fw-bold">🔒 BRANACA Security Scanner</h1>
 
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
+    <?php if(session('error')): ?>
+        <div class="alert alert-danger"><?php echo e(session('error')); ?></div>
+    <?php endif; ?>
 
     <div class="row justify-content-center">
         <!-- Static Analysis -->
@@ -53,8 +53,8 @@
                 <div class="card-body">
                     <h5 class="card-title">🧬 Static Analysis</h5>
                     <p class="card-text">Upload a source code file for scanning (e.g., Python, Java, JavaScript).</p>
-                    <form method="POST" action="{{ route('scan.static') }}" enctype="multipart/form-data">
-                        @csrf
+                    <form method="POST" action="<?php echo e(route('scan.static')); ?>" enctype="multipart/form-data">
+                        <?php echo csrf_field(); ?>
                         <div class="mb-3">
                             <input type="file" class="form-control" name="code_file" accept=".py,.java,.js" required>
                         </div>
@@ -87,8 +87,8 @@
                 <div class="card-body">
                     <h5 class="card-title">🌐 Dynamic Analysis</h5>
                     <p class="card-text">Enter a live IP and port for real-time scanning (e.g., 192.168.1.10:8080).</p>
-                    <form method="POST" action="{{ route('scan.dynamic') }}">
-                        @csrf
+                    <form method="POST" action="<?php echo e(route('scan.dynamic')); ?>">
+                        <?php echo csrf_field(); ?>
                         <div class="mb-3">
                             <label for="target_url" class="form-label">Target URL:</label>
                             <input type="url" class="form-control" name="target_url" required>
@@ -119,7 +119,7 @@
 
 
             <div class="d-flex justify-content-end mb-4">
-                <a href="{{ route('scan.history') }}" class="btn btn-outline-secondary shadow-sm">
+                <a href="<?php echo e(route('scan.history')); ?>" class="btn btn-outline-secondary shadow-sm">
                     📜 View Scan History
                 </a>
             </div>
@@ -128,40 +128,9 @@
 </div>
 
 <!-- Global Loading Spinner -->
-{{-- <div id="loadingSpinner" class="position-fixed top-0 start-0 w-100 h-100 d-none flex-column justify-content-center align-items-center bg-white bg-opacity-75" style="z-index: 1050;">
-    <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;" role="status">
-        <span class="visually-hidden">Scanning...</span>
-    </div>
-    <div class="mt-4 fs-5 text-dark">Analyzing your input... please wait</div>
-    <div class="mt-2">
-        <span class="dot-animation">.</span>
-        <span class="dot-animation">.</span>
-        <span class="dot-animation">.</span>
-    </div>
-</div> --}}
 
-{{-- <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const forms = document.querySelectorAll("form");
-        const spinner = document.getElementById("loadingSpinner");
 
-        forms.forEach(form => {
-            form.addEventListener("submit", function () {
-                spinner.classList.remove("d-none");
-                spinner.style.opacity = 0;
-                setTimeout(() => {
-                    spinner.style.transition = "opacity 0.5s";
-                    spinner.style.opacity = 1;
-                }, 10);
 
-                setTimeout(() => {
-                    if (!spinner.classList.contains("d-none")) {
-                        spinner.innerHTML += `<div class="mt-4 text-danger">⚠️ Scan may have stalled. Please refresh.</div>`;
-                    }
-                }, 90000);
-            });
-        });
-    });
-</script> --}}
 </body>
 </html>
+<?php /**PATH /home/ssd2mtc/bracana-svet-laravel/backend/resources/views/upload.blade.php ENDPATH**/ ?>

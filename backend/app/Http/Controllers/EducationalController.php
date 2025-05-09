@@ -9,7 +9,8 @@ use App\Models\ZapScan;
 use App\Models\NiktoScan;
 use OpenAI;
 use Illuminate\Support\Facades\Log;
- 
+use App\Models\SemgrepScan;
+use App\Http\Controllers\SemgrepScanController;
 
 
 
@@ -67,7 +68,7 @@ class EducationalController extends Controller
         return match ($tool) {
             'zap' => $item['desc'] ?? 'No explanation available.',
             'nikto' => $item['msg'] ?? 'Generic server misconfiguration.',
-            'semgrep', 'codeql' => $item['message'] ?? 'Static code issue detected.',
+            'semgrep', 'codeql' => $item['extra']['message'] ?? 'Static code issue detected.',
             default => 'Unknown tool — no details.'
         };
     }
@@ -82,7 +83,7 @@ class EducationalController extends Controller
             default => 'No fix available.'
         };
     }
-
+ 
 
     public function educateFromStorage($tool, $id)
     {
@@ -93,33 +94,33 @@ class EducationalController extends Controller
             case 'nikto':
                 $scan = NiktoScan::findOrFail($id);
                 break;
+            case 'semgrep':
+                $scan = SemgrepScan::findOrFail($id); // ✅ Add support for Semgrep
+                break;
             default:
                 abort(404, 'Unknown scan tool');
         }
 
         $results = is_string($scan->findings) ? json_decode($scan->findings, true) : $scan->findings;
 
-
         $metricsController = new MetricsController();
-        $metricResponse = $metricsController->analyze(new \Illuminate\Http\Request([
+        $metricResponse = $metricsController->analyze(new Request([
             'results' => $results,
             'tool' => $tool
         ]))->getData(true);
 
-        $request = new Request([
+        $guidanceResponse = $this->generateGuidance(new Request([
             'results' => $results,
-            'tool' => $tool,
-        ]);
-        
-        $guidanceResponse = $this->generateGuidance($request)->getData(true);
+            'tool' => $tool
+        ]))->getData(true);
 
         return view('educational', [
             'tool' => $tool,
             'metrics' => $guidanceResponse['metrics'] ?? [],
             'guidance' => $guidanceResponse['guidance'] ?? [],
         ]);
-        
     }
+
 
 
     //hash map for owasp reference links
@@ -212,4 +213,17 @@ class EducationalController extends Controller
             return back()->with('aiComment', 'Sorry, AI is temporarily unavailable.');
         }
     }
+
+    protected function customSemgrepExplanation(array $item): ?string
+    {
+        $msg = strtolower($item['message'] ?? '');
+
+        return match (true) {
+            str_contains($msg, 'csrf') => 'Cross-Site Request Forgery protection is missing. Consider using a CSRF token.',
+            str_contains($msg, 'hard-coded credential') => 'Sensitive credentials should not be hard-coded. Use environment variables.',
+            str_contains($msg, 'child_process') => 'Dynamic process execution can lead to command injection. Sanitize user input.',
+            default => null,
+        };
+    }
+
 }

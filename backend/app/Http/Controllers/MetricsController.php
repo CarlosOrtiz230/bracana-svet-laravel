@@ -65,38 +65,60 @@ class MetricsController extends Controller
         return match ($tool) {
             'zap' => strtolower(trim(strtok($item['riskdesc'] ?? 'unknown', ' '))),
             'nikto' => $this->guessNiktoSeverity($item),
-            'semgrep' => strtolower($item['severity'] ?? 'low'),
+           'semgrep' => $this->normalizeSemgrepSeverity($item['severity'] ?? 'INFO'),
             'codeql' => strtolower($item['severity'] ?? 'warning'),
             default => 'informational'
         };
     }
 
     public function guessNiktoSeverity(array $item): string
-{
-    $description = strtolower($item['description'] ?? '');
+    {
+        $description = strtolower($item['description'] ?? '');
 
-    // High-risk indicators
-    if (str_contains($description, 'remote file inclusion') ||
-        str_contains($description, 'directory traversal') ||
-        str_contains($description, 'admin login found') ||
-        str_contains($description, 'authentication bypass')) {
-        return 'high';
+        // High-risk indicators
+        if (str_contains($description, 'remote file inclusion') ||
+            str_contains($description, 'directory traversal') ||
+            str_contains($description, 'admin login found') ||
+            str_contains($description, 'authentication bypass')) {
+            return 'high';
+        }
+
+        // Medium-risk indicators
+        if (str_contains($description, 'x-content-type-options') ||
+            str_contains($description, 'strict-transport-security') ||
+            str_contains($description, 'csp') || // content-security-policy
+            str_contains($description, 'referrer-policy') ||
+            str_contains($description, 'methods') || // allowed http methods
+            str_contains($description, 'banner changed') ||
+            str_contains($description, 'clickjacking') ||
+            str_contains($description, 'access-control-allow-origin')) {
+            return 'medium';
+        }
+
+        // Anything else = low
+        return 'low';
     }
 
-    // Medium-risk indicators
-    if (str_contains($description, 'x-content-type-options') ||
-        str_contains($description, 'strict-transport-security') ||
-        str_contains($description, 'csp') || // content-security-policy
-        str_contains($description, 'referrer-policy') ||
-        str_contains($description, 'methods') || // allowed http methods
-        str_contains($description, 'banner changed') ||
-        str_contains($description, 'clickjacking') ||
-        str_contains($description, 'access-control-allow-origin')) {
-        return 'medium';
+    protected function normalizeSemgrepSeverity(string $raw): string
+    {
+        return match (strtoupper($raw)) {
+            'ERROR' => 'high',
+            'WARNING' => 'medium',
+            'INFO' => 'low',
+            default => 'informational'
+        };
     }
 
-    // Anything else = low
-    return 'low';
-}
+    //Reusable shortcut for inline usage  for scoring
+    public function analyzeInline(array $results, string $tool): int
+    {
+        $score = 0;
+        foreach ($results as $finding) {
+            $severity = $this->extractSeverity($finding, $tool);
+            $score += $this->severityScores[$severity] ?? 0;
+        }
+        return $score;
+    }
+
 
 }
