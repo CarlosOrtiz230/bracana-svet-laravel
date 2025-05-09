@@ -485,7 +485,7 @@ class ScanController extends Controller
         ];
     }, $results);
 
-    $scan = \App\Models\SemgrepScan::create([
+    $scan =  SemgrepScan::create([
         'target_file' => $filename,
         'findings' => $normalized,
         'raw_output' => $raw,
